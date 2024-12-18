@@ -1,0 +1,12 @@
+apiVersion: v2
+name: enterprise
+description: Enterprise Helm chart for deploying the complete application stack
+version: 0.1.0
+type: application
+dependencies:
+  - name: redis
+    version: "17.x.x"
+    repository: https://charts.bitnami.com/bitnami
+  - name: postgresql
+    version: "12.x.x"
+    repository: https://charts.bitnami.com/bitnami 

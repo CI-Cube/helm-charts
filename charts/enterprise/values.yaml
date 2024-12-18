@@ -1,0 +1,70 @@
+global:
+  imageRegistry: "ghcr.io"
+  imagePullSecrets:
+    - name: registry-secret
+
+api:
+  image:
+    repository: ci-cube/cicube-api/api
+    tag: latest
+  replicaCount: 1
+  resources:
+    limits:
+      cpu: 1000m
+      memory: 1Gi
+    requests:
+      cpu: 500m
+      memory: 512Mi
+  env:
+    DATABASE_HOST: "{{ .Release.Name }}-postgresql"
+    DATABASE_USER: ""
+    DATABASE_PASSWORD: ""
+    DATABASE_NAME: ""
+    REDIS_HOST: "{{ .Release.Name }}-redis-master"
+    JWT_SECRET: ""
+    GITHUB_CLIENT_ID: ""
+    GITHUB_CLIENT_SECRET: ""
+    GOOGLE_CLIENT_ID: ""
+    GOOGLE_CLIENT_SECRET: ""
+    WEB_URL: ""
+    API_URL: ""
+    SMTP_USERNAME: ""
+    SMTP_PASSWORD: ""
+    CUBE_API_URL: "http://{{ .Release.Name }}-cube:4000/cubejs-api/v1"
+    LOOPS_API_KEY: ""
+
+cube:
+  image:
+    repository: ci-cube/cicube-api/cube
+    tag: latest
+  replicaCount: 1
+  resources:
+    limits:
+      cpu: 1000m
+      memory: 1Gi
+    requests:
+      cpu: 500m
+      memory: 512Mi
+  env:
+    CUBEJS_DB_TYPE: postgres
+    CUBEJS_DB_HOST: "{{ .Release.Name }}-postgresql"
+    CUBEJS_DB_USER: ""
+    CUBEJS_DB_PASS: ""
+    CUBEJS_DB_NAME: ""
+    CUBEJS_API_SECRET: ""
+
+postgresql:
+  auth:
+    postgresPassword: ""
+    database: ""
+  primary:
+    persistence:
+      size: 10Gi
+
+redis:
+  auth:
+    password: ""
+  architecture: standalone
+  master:
+    persistence:
+      size: 8Gi 

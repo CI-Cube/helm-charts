@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: cube-refresh-worker
+  name: cube-api
   labels:
     {{- include "chart.labels" . | nindent 4 }}
 {{- if .Values.annotations }}
@@ -9,11 +9,11 @@ metadata:
 {{- end }}
 spec:
   {{- if not .Values.autoscaling.enabled }}
-  replicas: {{ .Values.cubeRefreshWorker.replicas }}
+  replicas: {{ .Values.cubeApi.replicas }}
   {{- end }}
   selector:
     matchLabels:
-      cubejsApp: cubeRefreshWorker
+      cubejsApp: cubeApi
   template:
     metadata:
       {{- with .Values.podAnnotations }}
@@ -21,10 +21,10 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       labels:
-        cubejsApp: cubeRefreshWorker
+        cubejsApp: cubeApi
     spec:
       {{- with .Values.imagePullSecrets }}
-      imagePullSecrets:
+      imagePullSecrets: 
         {{- toYaml . | nindent 8 }}
       {{- end }}
       serviceAccountName: {{ include "chart.serviceAccountName" . }}
@@ -37,18 +37,18 @@ spec:
       containers:
         - name: {{ .Chart.Name }}
           envFrom:
-          - configMapRef: 
-              name: {{ .Values.cubeRefreshWorker.configmap.name }}
+          - configMapRef:
+              name: {{ .Values.cubeApi.configmap.name }}
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
-          image: "{{ .Values.cubeRefreshWorker.image }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
-          imagePullPolicy: {{ .Values.cubeRefreshWorker.pullPolicy }}
+          image: "{{ .Values.cubeApi.image }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.cubeApi.pullPolicy }}
           volumeMounts:
             - mountPath: /cube/conf2
               name: cubeapi-pv
           ports:
             - name: http
-              containerPort: {{ .Values.cubeRefreshWorker.service.port }}
+              containerPort: {{ .Values.cubeApi.service.port }}
               protocol: TCP
           #livenessProbe:
           #  httpGet:

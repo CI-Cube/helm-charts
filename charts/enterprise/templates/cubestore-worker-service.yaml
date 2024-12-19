@@ -1,19 +1,15 @@
-{{- if .Values.cube.cubestore.enabled }}
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ .Release.Name }}-cubestore-worker
+  name: cubestore-worker
   labels:
-    app: {{ .Release.Name }}-cubestore-worker
-    {{- include "enterprise.labels" . | nindent 4 }}
+    {{- include "chart.labels" . | nindent 4 }}
 spec:
-  type: {{ .Values.cube.cubestore.worker.service.type }}
   clusterIP: None
   ports:
-    - port: {{ .Values.cube.cubestore.worker.service.service_port }}
-      targetPort: {{ .Values.cube.cubestore.worker.service.port }}
+    - port: {{ .Values.cubestoreWorker.service.service_port }}
+      targetPort: {{ .Values.cubestoreWorker.service.port }}
       protocol: TCP
       name: http
   selector:
-    app: {{ .Release.Name }}-cubestore-worker
-{{- end }} 
+    cubejsApp: cubestoreWorker

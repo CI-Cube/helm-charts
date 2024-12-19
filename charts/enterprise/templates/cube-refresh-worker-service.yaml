@@ -1,16 +1,15 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ .Release.Name }}-cube-refresh-worker
+  name: cube-refresh-worker
   labels:
-    app: {{ .Release.Name }}-cube-refresh-worker
-    {{- include "enterprise.labels" . | nindent 4 }}
+    {{- include "chart.labels" . | nindent 4 }}
 spec:
-  type: {{ .Values.cube.refreshWorker.service.type }}
+  type: {{ .Values.cubeRefreshWorker.service.type }}
   ports:
-    - port: {{ .Values.cube.refreshWorker.service.service_port }}
-      targetPort: {{ .Values.cube.refreshWorker.service.port }}
+    - port: {{ .Values.cubeRefreshWorker.service.service_port }}
+      targetPort: {{ .Values.cubeRefreshWorker.service.port }}
       protocol: TCP
       name: http
   selector:
-    app: {{ .Release.Name }}-cube-refresh-worker 
+    cubejsApp: cubeRefreshWorker

@@ -1,16 +1,14 @@
-{{- if .Values.cube.cubestore.enabled }}
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ .Release.Name }}-cubestore-router
+  name: cubestore-router
   labels:
-    app: {{ .Release.Name }}-cubestore-router
-    {{- include "enterprise.labels" . | nindent 4 }}
+    {{- include "chart.labels" . | nindent 4 }}
 spec:
-  type: {{ .Values.cube.cubestore.router.service.type }}
+  type: {{ .Values.cubestoreRouter.service.type }}
   ports:
-    - port: {{ .Values.cube.cubestore.router.service.service_port }}
-      targetPort: {{ .Values.cube.cubestore.router.service.port }}
+    - port: {{ .Values.cubestoreRouter.service.service_port }}
+      targetPort: {{ .Values.cubestoreRouter.service.port }}
       protocol: TCP
       name: http
     - port: 3030
@@ -20,7 +18,6 @@ spec:
     - port: 3306
       targetPort: 3306
       protocol: TCP
-      name: mysql
+      name: mysql   
   selector:
-    app: {{ .Release.Name }}-cubestore-router
-{{- end }} 
+    cubejsApp: cubestoreRouter

@@ -20,7 +20,7 @@ spec:
       {{- end }}
       containers:
         - name: cube
-          image: "{{ .Values.global.imageRegistry }}/{{ .Values.cube.image.repository }}:{{ .Values.cube.image.tag }}"
+          image: "{{ .Values.cube.image.registry }}/{{ .Values.cube.image.repository }}:{{ .Values.cube.image.tag }}"
           ports:
             - containerPort: 4000
           resources:

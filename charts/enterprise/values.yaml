@@ -1,8 +1,6 @@
-global:
-  imageRegistry: "ghcr.io"
-
 api:
   image:
+    registry: "ghcr.io"
     repository: ci-cube/cicube-api/api
     tag: sha-de8237c
   imagePullSecrets:
@@ -35,6 +33,7 @@ api:
 
 cube:
   image:
+    registry: "ghcr.io"
     repository: ci-cube/cicube-api/cube
     tag: sha-4bbc5a6
   imagePullSecrets:

@@ -14,7 +14,7 @@ spec:
       labels:
         app: {{ .Release.Name }}-cube
     spec:
-      {{- with .Values.global.imagePullSecrets }}
+      {{- with .Values.cube.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}

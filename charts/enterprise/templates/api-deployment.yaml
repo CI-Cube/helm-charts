@@ -14,7 +14,7 @@ spec:
       labels:
         app: {{ .Release.Name }}-api
     spec:
-      {{- with .Values.global.imagePullSecrets }}
+      {{- with .Values.api.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}

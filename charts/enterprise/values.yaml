@@ -1,12 +1,12 @@
 global:
   imageRegistry: "ghcr.io"
-  imagePullSecrets:
-    - name: registry-secret
 
 api:
   image:
     repository: ci-cube/cicube-api/api
-    tag: latest
+    tag: sha-de8237c
+  imagePullSecrets:
+    - name: registry-secret
   replicaCount: 1
   resources:
     limits:
@@ -16,27 +16,29 @@ api:
       cpu: 500m
       memory: 512Mi
   env:
-    DATABASE_HOST: "{{ .Release.Name }}-postgresql"
-    DATABASE_USER: ""
-    DATABASE_PASSWORD: ""
-    DATABASE_NAME: ""
-    REDIS_HOST: "{{ .Release.Name }}-redis-master"
-    JWT_SECRET: ""
+    DATABASE_HOST: "my-release-postgresql"
+    DATABASE_USER: "postgres"
+    DATABASE_PASSWORD: "test123"
+    DATABASE_NAME: "cicube"
+    REDIS_HOST: "my-release-redis-master"
+    JWT_SECRET: "test-jwt-secret"
+    WEB_URL: "http://localhost:3000"
+    API_URL: "http://localhost:3000"
+    CUBE_API_URL: "http://my-release-cube:4000/cubejs-api/v1"
     GITHUB_CLIENT_ID: ""
     GITHUB_CLIENT_SECRET: ""
     GOOGLE_CLIENT_ID: ""
     GOOGLE_CLIENT_SECRET: ""
-    WEB_URL: ""
-    API_URL: ""
     SMTP_USERNAME: ""
     SMTP_PASSWORD: ""
-    CUBE_API_URL: "http://{{ .Release.Name }}-cube:4000/cubejs-api/v1"
     LOOPS_API_KEY: ""
 
 cube:
   image:
     repository: ci-cube/cicube-api/cube
-    tag: latest
+    tag: sha-4bbc5a6
+  imagePullSecrets:
+    - name: registry-secret
   replicaCount: 1
   resources:
     limits:
@@ -47,24 +49,24 @@ cube:
       memory: 512Mi
   env:
     CUBEJS_DB_TYPE: postgres
-    CUBEJS_DB_HOST: "{{ .Release.Name }}-postgresql"
-    CUBEJS_DB_USER: ""
-    CUBEJS_DB_PASS: ""
-    CUBEJS_DB_NAME: ""
-    CUBEJS_API_SECRET: ""
+    CUBEJS_DB_HOST: "my-release-postgresql"
+    CUBEJS_DB_USER: "postgres"
+    CUBEJS_DB_PASS: "test123"
+    CUBEJS_DB_NAME: "cicube"
+    CUBEJS_API_SECRET: "test-jwt-secret"
 
 postgresql:
   auth:
-    postgresPassword: ""
-    database: ""
+    postgresPassword: "test123"
+    database: "cicube"
   primary:
     persistence:
-      size: 10Gi
+      size: 1Gi
 
 redis:
   auth:
-    password: ""
+    enabled: false
   architecture: standalone
   master:
     persistence:
-      size: 8Gi 
+      size: 1Gi

@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.cube.cubestore.router.configmap.name }}
+data:
+  {{- range $key, $val := .Values.cube.cubestore.router.env }}
+  {{ $key }}: {{ $val | quote }}
+  {{- end }} 

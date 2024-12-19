@@ -20,19 +20,25 @@ spec:
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+      volumes:
+        - name: cube-pv
+          persistentVolumeClaim:
+            claimName: cube-pvc
       containers:
         - name: cube
           image: "{{ .Values.cube.image.registry }}/{{ .Values.cube.image.repository }}:{{ .Values.cube.image.tag }}"
           ports:
             - name: http
-              containerPort: 4000
-          env:
-            {{- range $key, $value := .Values.cube.env }}
-            - name: {{ $key }}
-              value: {{ $value | quote }}
-            {{- end }}
+              containerPort: {{ .Values.cube.service.port }}
+              protocol: TCP
+          envFrom:
+            - configMapRef:
+                name: {{ .Values.cube.configmap.name }}
           resources:
             {{- toYaml .Values.cube.resources | nindent 12 }}
+          volumeMounts:
+            - mountPath: /cube/conf
+              name: cube-pv
           livenessProbe:
             httpGet:
               path: /readiness

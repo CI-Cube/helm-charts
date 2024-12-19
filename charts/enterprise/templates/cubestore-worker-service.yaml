@@ -2,18 +2,18 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "enterprise.fullname" . }}-cubestore-worker
+  name: {{ .Release.Name }}-cubestore-worker
   labels:
+    app: {{ .Release.Name }}-cubestore-worker
     {{- include "enterprise.labels" . | nindent 4 }}
 spec:
   type: {{ .Values.cube.cubestore.worker.service.type }}
   clusterIP: None
   ports:
-    - port: {{ .Values.cube.cubestore.worker.service.port }}
-      targetPort: http
+    - port: {{ .Values.cube.cubestore.worker.service.service_port }}
+      targetPort: {{ .Values.cube.cubestore.worker.service.port }}
       protocol: TCP
       name: http
   selector:
-    {{- include "enterprise.selectorLabels" . | nindent 4 }}
-    app.kubernetes.io/component: cubestore-worker
+    app: {{ .Release.Name }}-cubestore-worker
 {{- end }} 

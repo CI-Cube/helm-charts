@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.cube.refreshWorker.configmap.name }}
+data:
+  {{- range $key, $val := .Values.cube.env }}
+  {{ $key }}: {{ $val | quote }}
+  {{- end }}
+  CUBEJS_REFRESH_WORKER: "true" 

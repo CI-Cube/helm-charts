@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.cube.configmap.name }}
+data:
+  {{- range $key, $val := .Values.cube.env }}
+  {{ $key }}: {{ $val | quote }}
+  {{- end }} 

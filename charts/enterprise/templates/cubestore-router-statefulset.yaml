@@ -22,32 +22,37 @@ spec:
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+      volumes:
+        - name: cubestore-pv
+          persistentVolumeClaim:
+            claimName: cubestore-pvc
       containers:
         - name: cubestore-router
           image: "{{ .Values.cube.image.registry }}/{{ .Values.cube.image.repository }}:{{ .Values.cube.image.tag }}"
           command: ["/bin/sh","-c"]
           args: ["unset CUBESTORE_WORKER_PORT; ./cubestored"]
-          env:
-            - name: CUBESTORE_META_PORT
-              value: {{ .Values.cube.cubestore.router.service.port | quote }}
-            - name: CUBESTORE_SERVER_NAME
-              value: "{{ .Release.Name }}-cubestore-router:{{ .Values.cube.cubestore.router.service.port }}"
-            - name: CUBESTORE_REMOTE_DIR
-              value: "/cube/data"
-            - name: CUBESTORE_WORKERS
-              value: {{ $count := .Values.cube.cubestore.worker.replicaCount | int }}{{- $networkAppPort := .Values.cube.cubestore.worker.service.port -}}
-              {{- range $i := until $count }}{{ if $i }},{{ end }}{{ $.Release.Name }}-cubestore-worker-{{ $i }}.{{ $.Release.Name }}-cubestore-worker:{{ $networkAppPort }}{{- end }}
-            - name: CUBEJS_LOG_LEVEL
-              value: "info"
           ports:
             - name: http
               containerPort: {{ .Values.cube.cubestore.router.service.port }}
               protocol: TCP
+            - name: http2
+              containerPort: 3030
+              protocol: TCP
+            - name: mysql
+              containerPort: 3306
+              protocol: TCP
+          envFrom:
+            - configMapRef:
+                name: {{ .Values.cube.cubestore.router.configmap.name }}
+          env:
+            - name: CUBESTORE_WORKERS
+              value: {{ $count := .Values.cube.cubestore.worker.replicaCount | int }}{{- $networkAppPort := .Values.cube.cubestore.worker.service.port -}}
+              {{- range $i := until $count }}{{ if $i }},{{ end }}{{ $.Release.Name }}-cubestore-worker-{{ $i }}.{{ $.Release.Name }}-cubestore-worker:{{ $networkAppPort }}{{- end }}
           resources:
             {{- toYaml .Values.cube.cubestore.router.resources | nindent 12 }}
           volumeMounts:
-            - name: data
-              mountPath: /cube/data
+            - mountPath: /cube/data
+              name: cubestore-pv
           livenessProbe:
             httpGet:
               path: /readiness

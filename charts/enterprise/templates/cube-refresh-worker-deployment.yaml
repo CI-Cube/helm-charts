@@ -21,20 +21,27 @@ spec:
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+      volumes:
+        - name: cube-pv
+          persistentVolumeClaim:
+            claimName: cube-pvc
       containers:
         - name: cube-refresh-worker
           image: "{{ .Values.cube.image.registry }}/{{ .Values.cube.image.repository }}:{{ .Values.cube.image.tag }}"
           command: ["node"]
           args: ["index.js"]
-          env:
-            {{- range $key, $value := .Values.cube.env }}
-            - name: {{ $key }}
-              value: {{ $value | quote }}
-            {{- end }}
-            - name: CUBEJS_REFRESH_WORKER
-              value: "true"
+          ports:
+            - name: http
+              containerPort: {{ .Values.cube.refreshWorker.service.port }}
+              protocol: TCP
+          envFrom:
+            - configMapRef:
+                name: {{ .Values.cube.refreshWorker.configmap.name }}
           resources:
             {{- toYaml .Values.cube.refreshWorker.resources | nindent 12 }}
+          volumeMounts:
+            - mountPath: /cube/conf
+              name: cube-pv
           livenessProbe:
             httpGet:
               path: /readiness

@@ -22,6 +22,10 @@ spec:
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+      volumes:
+        - name: cubestore-pv
+          persistentVolumeClaim:
+            claimName: cubestore-pvc
       initContainers:
         - name: init-router
           image: busybox
@@ -29,6 +33,13 @@ spec:
       containers:
         - name: cubestore-worker
           image: "{{ .Values.cube.image.registry }}/{{ .Values.cube.image.repository }}:{{ .Values.cube.image.tag }}"
+          ports:
+            - name: http
+              containerPort: {{ .Values.cube.cubestore.worker.service.port }}
+              protocol: TCP
+          envFrom:
+            - configMapRef:
+                name: {{ .Values.cube.cubestore.worker.configmap.name }}
           env:
             - name: POD_NAME
               valueFrom:
@@ -36,23 +47,11 @@ spec:
                   fieldPath: metadata.name
             - name: CUBESTORE_SERVER_NAME
               value: "$(POD_NAME).{{ .Release.Name }}-cubestore-worker:{{ .Values.cube.cubestore.worker.service.port }}"
-            - name: CUBESTORE_WORKER_PORT
-              value: {{ .Values.cube.cubestore.worker.service.port | quote }}
-            - name: CUBESTORE_REMOTE_DIR
-              value: "/cube/data"
-            - name: CUBESTORE_META_ADDR
-              value: "{{ .Release.Name }}-cubestore-router:{{ .Values.cube.cubestore.router.service.port }}"
-            - name: CUBEJS_LOG_LEVEL
-              value: "info"
-          ports:
-            - name: http
-              containerPort: {{ .Values.cube.cubestore.worker.service.port }}
-              protocol: TCP
           resources:
             {{- toYaml .Values.cube.cubestore.worker.resources | nindent 12 }}
           volumeMounts:
-            - name: data
-              mountPath: /cube/data
+            - mountPath: /cube/data
+              name: cubestore-pv
           livenessProbe:
             httpGet:
               path: /readiness

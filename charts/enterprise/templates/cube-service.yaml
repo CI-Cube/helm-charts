@@ -8,8 +8,8 @@ metadata:
 spec:
   type: {{ .Values.cube.service.type }}
   ports:
-    - port: {{ .Values.cube.service.port }}
-      targetPort: http
+    - port: {{ .Values.cube.service.service_port }}
+      targetPort: {{ .Values.cube.service.port }}
       protocol: TCP
       name: http
   selector:

@@ -26,7 +26,7 @@ api:
     host: "api.cicube.io"
     tls:
       enabled: true
-      secretName: ""  # If empty, will be auto-generated as <release-name>-api-tls
+      secretName: ""
     path: /
     pathType: Prefix
   env:
@@ -69,6 +69,46 @@ cube:
     CUBEJS_DB_PASS: "test123"
     CUBEJS_DB_NAME: "cicube"
     CUBEJS_API_SECRET: "test-jwt-secret"
+  
+  refreshWorker:
+    enabled: true
+    replicaCount: 1
+    resources:
+      limits:
+        cpu: 1000m
+        memory: 1Gi
+      requests:
+        cpu: 500m
+        memory: 512Mi
+
+  cubestore:
+    enabled: true
+    persistence:
+      enabled: true
+      size: 1Gi
+      storageClass: ""
+    router:
+      replicaCount: 1
+      resources:
+        limits:
+          cpu: 1000m
+          memory: 2Gi
+        requests:
+          cpu: 500m
+          memory: 1Gi
+      service:
+        port: 9999
+    worker:
+      replicaCount: 1
+      resources:
+        limits:
+          cpu: 1000m
+          memory: 2Gi
+        requests:
+          cpu: 500m
+          memory: 1Gi
+      service:
+        port: 9001
 
 postgresql:
   auth:

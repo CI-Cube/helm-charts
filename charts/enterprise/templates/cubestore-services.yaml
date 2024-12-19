@@ -1,0 +1,38 @@
+{{- if .Values.cube.cubestore.enabled }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Release.Name }}-cubestore-router
+  labels:
+    app: {{ .Release.Name }}-cubestore-router
+    {{- include "enterprise.labels" . | nindent 4 }}
+spec:
+  type: ClusterIP
+  ports:
+    - port: {{ .Values.cube.cubestore.router.service.port }}
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    app: {{ .Release.Name }}-cubestore-router
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Release.Name }}-cubestore-worker
+  labels:
+    app: {{ .Release.Name }}-cubestore-worker
+    {{- include "enterprise.labels" . | nindent 4 }}
+spec:
+  type: ClusterIP
+  clusterIP: None
+  ports:
+    - port: {{ .Values.cube.cubestore.worker.service.port }}
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    app: {{ .Release.Name }}-cubestore-worker
+{{- end }} 

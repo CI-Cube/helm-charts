@@ -1,0 +1,36 @@
+{{- if .Values.cube.refreshWorker.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-cube-refresh-worker
+  labels:
+    app: {{ .Release.Name }}-cube-refresh-worker
+    {{- include "enterprise.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.cube.refreshWorker.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}-cube-refresh-worker
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}-cube-refresh-worker
+        {{- include "enterprise.labels" . | nindent 8 }}
+    spec:
+      {{- with .Values.cube.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: refresh-worker
+          image: "{{ .Values.cube.image.registry }}/{{ .Values.cube.image.repository }}:{{ .Values.cube.image.tag }}"
+          env:
+            {{- range $key, $value := .Values.cube.env }}
+            - name: {{ $key }}
+              value: {{ $value | quote }}
+            {{- end }}
+            - name: CUBEJS_REFRESH_WORKER
+              value: "true"
+          resources:
+            {{- toYaml .Values.cube.refreshWorker.resources | nindent 12 }}
+{{- end }} 

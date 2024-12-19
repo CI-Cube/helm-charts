@@ -1,0 +1,59 @@
+{{- if .Values.cube.cubestore.enabled }}
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ .Release.Name }}-cubestore-router
+  labels:
+    app: {{ .Release.Name }}-cubestore-router
+    {{- include "enterprise.labels" . | nindent 4 }}
+spec:
+  serviceName: {{ .Release.Name }}-cubestore-router
+  replicas: {{ .Values.cube.cubestore.router.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}-cubestore-router
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}-cubestore-router
+        {{- include "enterprise.labels" . | nindent 8 }}
+    spec:
+      {{- with .Values.cube.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: router
+          image: "{{ .Values.cube.image.registry }}/{{ .Values.cube.image.repository }}:{{ .Values.cube.image.tag }}"
+          env:
+            - name: CUBESTORE_REMOTE_DIR
+              value: "/cube/data"
+            - name: CUBESTORE_META_PORT
+              value: {{ .Values.cube.cubestore.router.service.port | quote }}
+            - name: CUBESTORE_SERVER_NAME
+              value: "{{ .Release.Name }}-cubestore-router:{{ .Values.cube.cubestore.router.service.port }}"
+            - name: CUBEJS_LOG_LEVEL
+              value: "info"
+          ports:
+            - name: http
+              containerPort: {{ .Values.cube.cubestore.router.service.port }}
+              protocol: TCP
+          resources:
+            {{- toYaml .Values.cube.cubestore.router.resources | nindent 12 }}
+          volumeMounts:
+            - name: data
+              mountPath: /cube/data
+  {{- if .Values.cube.cubestore.persistence.enabled }}
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: [ "ReadWriteOnce" ]
+        {{- if .Values.cube.cubestore.persistence.storageClass }}
+        storageClassName: {{ .Values.cube.cubestore.persistence.storageClass }}
+        {{- end }}
+        resources:
+          requests:
+            storage: {{ .Values.cube.cubestore.persistence.size }}
+  {{- end }}
+{{- end }} 

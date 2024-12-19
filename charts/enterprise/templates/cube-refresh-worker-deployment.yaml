@@ -25,12 +25,33 @@ spec:
         - name: refresh-worker
           image: "{{ .Values.cube.image.registry }}/{{ .Values.cube.image.repository }}:{{ .Values.cube.image.tag }}"
           env:
-            {{- range $key, $value := .Values.cube.env }}
-            - name: {{ $key }}
-              value: {{ $value | quote }}
-            {{- end }}
+            - name: CUBEJS_DB_TYPE
+              value: "postgres"
+            - name: CUBEJS_DB_HOST
+              value: {{ .Values.cube.env.CUBEJS_DB_HOST | quote }}
+            - name: CUBEJS_DB_NAME
+              value: {{ .Values.cube.env.CUBEJS_DB_NAME | quote }}
+            - name: CUBEJS_DB_USER
+              value: {{ .Values.cube.env.CUBEJS_DB_USER | quote }}
+            - name: CUBEJS_DB_PASS
+              value: {{ .Values.cube.env.CUBEJS_DB_PASS | quote }}
+            - name: CUBEJS_API_SECRET
+              value: {{ .Values.cube.env.CUBEJS_API_SECRET | quote }}
             - name: CUBEJS_REFRESH_WORKER
               value: "true"
+            - name: CUBEJS_CUBESTORE_HOST
+              value: "{{ .Release.Name }}-cubestore-router:{{ .Values.cube.cubestore.router.service.port }}"
+          ports:
+            - name: http
+              containerPort: 4000
+          livenessProbe:
+            httpGet:
+              path: /readiness
+              port: http
+          readinessProbe:
+            httpGet:
+              path: /readiness
+              port: http
           resources:
             {{- toYaml .Values.cube.refreshWorker.resources | nindent 12 }}
 {{- end }} 

@@ -34,6 +34,9 @@ spec:
               value: "{{ .Release.Name }}-cubestore-router:{{ .Values.cube.cubestore.router.service.port }}"
             - name: CUBEJS_LOG_LEVEL
               value: "info"
+            - name: CUBESTORE_WORKERS
+              value: {{ $count := .Values.cube.cubestore.worker.replicaCount | int }}{{- $networkAppPort := .Values.cube.cubestore.worker.service.port -}}
+              {{- range $i := until $count }}{{ if $i }},{{ end }}{{ $.Release.Name }}-cubestore-worker-{{ $i }}.{{ $.Release.Name }}-cubestore-worker:{{ $networkAppPort }}{{- end }}
           ports:
             - name: http
               containerPort: {{ .Values.cube.cubestore.router.service.port }}

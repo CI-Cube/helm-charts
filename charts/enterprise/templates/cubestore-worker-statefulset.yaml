@@ -27,7 +27,7 @@ spec:
           image: busybox
           command: ['sh', '-c', 'until nc -vz {{ .Release.Name }}-cubestore-router:{{ .Values.cube.cubestore.router.service.port }}; do echo "Waiting for router"; sleep 2; done;']
       containers:
-        - name: worker
+        - name: cubestore-worker
           image: "{{ .Values.cube.image.registry }}/{{ .Values.cube.image.repository }}:{{ .Values.cube.image.tag }}"
           env:
             - name: POD_NAME
@@ -53,6 +53,24 @@ spec:
           volumeMounts:
             - name: data
               mountPath: /cube/data
+          livenessProbe:
+            httpGet:
+              path: /readiness
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            successThreshold: 1
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /readiness
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            successThreshold: 1
+            failureThreshold: 3
   {{- if .Values.cube.cubestore.persistence.enabled }}
   volumeClaimTemplates:
     - metadata:

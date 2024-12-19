@@ -4,6 +4,7 @@ metadata:
   name: {{ .Release.Name }}-cube
   labels:
     app: {{ .Release.Name }}-cube
+    {{- include "enterprise.labels" . | nindent 4 }}
 spec:
   replicas: {{ .Values.cube.replicaCount }}
   selector:
@@ -13,6 +14,7 @@ spec:
     metadata:
       labels:
         app: {{ .Release.Name }}-cube
+        {{- include "enterprise.labels" . | nindent 8 }}
     spec:
       {{- with .Values.cube.imagePullSecrets }}
       imagePullSecrets:
@@ -24,22 +26,28 @@ spec:
           ports:
             - name: http
               containerPort: 4000
-          resources:
-            {{- toYaml .Values.cube.resources | nindent 12 }}
           env:
             {{- range $key, $value := .Values.cube.env }}
             - name: {{ $key }}
               value: {{ $value | quote }}
             {{- end }}
+          resources:
+            {{- toYaml .Values.cube.resources | nindent 12 }}
           livenessProbe:
             httpGet:
               path: /readiness
               port: http
             initialDelaySeconds: 30
             periodSeconds: 10
+            timeoutSeconds: 5
+            successThreshold: 1
+            failureThreshold: 3
           readinessProbe:
             httpGet:
               path: /readiness
               port: http
-            initialDelaySeconds: 5
-            periodSeconds: 10 
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            successThreshold: 1
+            failureThreshold: 3

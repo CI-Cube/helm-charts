@@ -1,0 +1,18 @@
+{{- if .Values.cube.cubestore.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "enterprise.fullname" . }}-cubestore-router
+  labels:
+    {{- include "enterprise.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.cube.cubestore.router.service.type }}
+  ports:
+    - port: {{ .Values.cube.cubestore.router.service.port }}
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "enterprise.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: cubestore-router
+{{- end }} 

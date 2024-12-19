@@ -23,20 +23,22 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       containers:
-        - name: router
+        - name: cubestore-router
           image: "{{ .Values.cube.image.registry }}/{{ .Values.cube.image.repository }}:{{ .Values.cube.image.tag }}"
+          command: ["/bin/sh","-c"]
+          args: ["unset CUBESTORE_WORKER_PORT; ./cubestored"]
           env:
-            - name: CUBESTORE_REMOTE_DIR
-              value: "/cube/data"
             - name: CUBESTORE_META_PORT
               value: {{ .Values.cube.cubestore.router.service.port | quote }}
             - name: CUBESTORE_SERVER_NAME
               value: "{{ .Release.Name }}-cubestore-router:{{ .Values.cube.cubestore.router.service.port }}"
-            - name: CUBEJS_LOG_LEVEL
-              value: "info"
+            - name: CUBESTORE_REMOTE_DIR
+              value: "/cube/data"
             - name: CUBESTORE_WORKERS
               value: {{ $count := .Values.cube.cubestore.worker.replicaCount | int }}{{- $networkAppPort := .Values.cube.cubestore.worker.service.port -}}
               {{- range $i := until $count }}{{ if $i }},{{ end }}{{ $.Release.Name }}-cubestore-worker-{{ $i }}.{{ $.Release.Name }}-cubestore-worker:{{ $networkAppPort }}{{- end }}
+            - name: CUBEJS_LOG_LEVEL
+              value: "info"
           ports:
             - name: http
               containerPort: {{ .Values.cube.cubestore.router.service.port }}
@@ -46,6 +48,24 @@ spec:
           volumeMounts:
             - name: data
               mountPath: /cube/data
+          livenessProbe:
+            httpGet:
+              path: /readiness
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            successThreshold: 1
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /readiness
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            successThreshold: 1
+            failureThreshold: 3
   {{- if .Values.cube.cubestore.persistence.enabled }}
   volumeClaimTemplates:
     - metadata:

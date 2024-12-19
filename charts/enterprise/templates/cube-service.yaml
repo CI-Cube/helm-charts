@@ -1,15 +1,16 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ .Release.Name }}-cube
+  name: {{ include "enterprise.fullname" . }}-cube
   labels:
-    app: {{ .Release.Name }}-cube
+    {{- include "enterprise.labels" . | nindent 4 }}
 spec:
-  type: ClusterIP
+  type: {{ .Values.cube.service.type }}
   ports:
-    - port: 4000
-      targetPort: 4000
+    - port: {{ .Values.cube.service.port }}
+      targetPort: http
       protocol: TCP
       name: http
   selector:
-    app: {{ .Release.Name }}-cube 
+    {{- include "enterprise.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: cube 

@@ -4,6 +4,7 @@ metadata:
   name: {{ .Release.Name }}-api
   labels:
     app: {{ .Release.Name }}-api
+    {{- include "enterprise.labels" . | nindent 4 }}
 spec:
   type: ClusterIP
   ports:

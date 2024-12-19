@@ -1,3 +1,7 @@
+# Override names
+nameOverride: ""
+fullnameOverride: ""
+
 api:
   image:
     registry: "ghcr.io"

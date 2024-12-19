@@ -4,6 +4,7 @@ metadata:
   name: {{ .Release.Name }}-api
   labels:
     app: {{ .Release.Name }}-api
+    {{- include "enterprise.labels" . | nindent 4 }}
 spec:
   replicas: {{ .Values.api.replicaCount }}
   selector:
@@ -13,6 +14,7 @@ spec:
     metadata:
       labels:
         app: {{ .Release.Name }}-api
+        {{- include "enterprise.labels" . | nindent 8 }}
     spec:
       {{- with .Values.api.imagePullSecrets }}
       imagePullSecrets:

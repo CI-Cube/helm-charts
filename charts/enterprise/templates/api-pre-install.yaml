@@ -1,0 +1,41 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ .Release.Name }}-api-pre-install
+  labels:
+    app: {{ .Release.Name }}-api
+    {{- include "enterprise.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": post-install, post-upgrade
+    "helm.sh/hook-weight": "-5"
+spec:
+  template:
+    metadata:
+      name: {{ .Release.Name }}-api-pre-install
+      labels:
+        app: {{ .Release.Name }}-api
+        {{- include "enterprise.labels" . | nindent 8 }}
+    spec:
+      {{- with .Values.api.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      restartPolicy: Never
+      containers:
+        - name: pre-install-job
+          image: "{{ .Values.api.image.registry }}/{{ .Values.api.image.repository }}:{{ .Values.api.image.tag }}"
+          command: ["/bin/sh"]
+          args:
+            - -c
+            - >-
+                npm run db:migrate &&
+                npm run db:seed
+          env:
+            - name: DATABASE_HOST
+              value: {{ .Values.api.env.DATABASE_HOST | quote }}
+            - name: DATABASE_USER
+              value: {{ .Values.api.env.DATABASE_USER | quote }}
+            - name: DATABASE_PASSWORD
+              value: {{ .Values.api.env.DATABASE_PASSWORD | quote }}
+            - name: DATABASE_NAME
+              value: {{ .Values.api.env.DATABASE_NAME | quote }} 

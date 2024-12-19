@@ -13,6 +13,18 @@ api:
     requests:
       cpu: 500m
       memory: 512Mi
+  ingress:
+    enabled: true
+    className: "nginx"
+    annotations:
+      nginx.ingress.kubernetes.io/rewrite-target: /
+      cert-manager.io/cluster-issuer: letsencrypt-prod
+    host: "api.cicube.io"
+    tls:
+      enabled: true
+      secretName: ""  # If empty, will be auto-generated as <release-name>-api-tls
+    path: /
+    pathType: Prefix
   env:
     DATABASE_HOST: "my-release-postgresql"
     DATABASE_USER: "postgres"

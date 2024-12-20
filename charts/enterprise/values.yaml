@@ -214,3 +214,4 @@ postgresql:
     persistence:
       enabled: false
       size: 10Gi
+      

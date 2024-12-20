@@ -1,9 +1,11 @@
 apiVersion: v1
 data:
-  {{- range $key, $val := .Values.cubeApi.env.var }}
+  {{- range $key, $val := .Values.cubeApi.env }}
   {{ $key }}: {{ $val | quote }}
   {{- end}}
 
 kind: "ConfigMap"
 metadata:
   name: {{ .Values.cubeApi.configmap.name }}
+  labels:
+    {{- include "enterprise.labels" . | nindent 4 }}

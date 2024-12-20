@@ -4,12 +4,12 @@ metadata:
   name: cube-api
   labels:
     {{- include "enterprise.labels" . | nindent 4 }}
-{{- if .Values.annotations }}
-  annotations: {{ toYaml .Values.annotations | nindent 4 }}
+{{- if .Values.cubeApi.annotations }}
+  annotations: {{ toYaml .Values.cubeApi.annotations | nindent 4 }}
 {{- end }}
 spec:
   {{- if not .Values.autoscaling.enabled }}
-  replicas: {{ .Values.cubeApi.replicas }}
+  replicas: {{ .Values.cubeApi.replicaCount }}
   {{- end }}
   selector:
     matchLabels:
@@ -23,7 +23,7 @@ spec:
       labels:
         cubejsApp: cubeApi
     spec:
-      {{- with .Values.imagePullSecrets }}
+      {{- with .Values.cubeApi.imagePullSecrets }}
       imagePullSecrets: 
         {{- toYaml . | nindent 8 }}
       {{- end }}
@@ -41,8 +41,8 @@ spec:
               name: {{ .Values.cubeApi.configmap.name }}
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
-          image: "{{ .Values.cubeApi.image }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
-          imagePullPolicy: {{ .Values.cubeApi.pullPolicy }}
+          image: "{{ .Values.cubeApi.image.registry }}/{{ .Values.cubeApi.image.repository }}:{{ .Values.cubeApi.image.tag }}"
+          imagePullPolicy: Always
           volumeMounts:
             - mountPath: /cube/conf2
               name: cubeapi-pv
@@ -50,16 +50,8 @@ spec:
             - name: http
               containerPort: {{ .Values.cubeApi.service.port }}
               protocol: TCP
-          #livenessProbe:
-          #  httpGet:
-          #    path: /
-          #    port: http
-          #readinessProbe:
-          #  httpGet:
-          #    path: /
-          #    port: http
           resources:
-            {{- toYaml .Values.resources | nindent 12 }}
+            {{- toYaml .Values.cubeApi.resources | nindent 12 }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}

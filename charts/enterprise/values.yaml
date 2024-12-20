@@ -21,6 +21,54 @@ ingress:
   hosts: []
   tls: []
 
+cubeApi:
+  image:
+    registry: "ghcr.io"
+    repository: ci-cube/cicube-api/cube
+    tag: sha-4bbc5a6
+  imagePullSecrets:
+    - name: registry-secret
+  annotations: {reloader.stakater.com/auto: "true"}
+  replicaCount: 3
+  resources:
+    limits:
+      cpu: 1000m
+      memory: 1Gi
+    requests:
+      cpu: 500m
+      memory: 512Mi
+  service:
+    type: ClusterIP
+    port: 4000
+    service_port: 4000
+  configmap:
+    name: cube-cm
+  env:
+    CUBEJS_DB_TYPE: postgres
+    CUBEJS_DB_HOST: "my-release-postgresql"
+    CUBEJS_DB_USER: "postgres"
+    CUBEJS_DB_PASS: "test123"
+    CUBEJS_DB_NAME: "cicube"
+    CUBEJS_API_SECRET: "test-jwt-secret"
+    CUBEJS_DEV_MODE: "false"
+    CUBEJS_DB_SSL: "true"
+    CUBEJS_DEFAULT_API_SCOPES: "graphql,meta,data,jobs"
+    CUBEJS_CUBESTORE_HOST: "cubestore-router"
+    CUBEJS_LOG_LEVEL: "trace"
+  ingress:
+    enabled: true
+    annotations:
+      cert-manager.io/issuer: "letsencrypt-prod"
+    hosts:
+      - host: cube.cicube.io
+        paths:
+          - path: /
+            pathType: ImplementationSpecific
+    tls:
+      - secretName: cube.cicube.io-tls
+        hosts:
+          - cube.cicube.io
+
 cubeRefreshWorker:
   enabled: true
   image:
@@ -144,102 +192,6 @@ api:
     SMTP_USERNAME: ""
     SMTP_PASSWORD: ""
     LOOPS_API_KEY: ""
-
-cube:
-  image:
-    registry: "ghcr.io"
-    repository: ci-cube/cicube-api/cube
-    tag: sha-4bbc5a6
-  imagePullSecrets:
-    - name: registry-secret
-  annotations: {reloader.stakater.com/auto: "true"}
-  replicaCount: 3
-  resources:
-    limits:
-      cpu: 1000m
-      memory: 1Gi
-    requests:
-      cpu: 500m
-      memory: 512Mi
-  service:
-    type: ClusterIP
-    port: 4000
-    service_port: 4000
-  configmap:
-    name: cube-cm
-  env:
-    CUBEJS_DB_TYPE: postgres
-    CUBEJS_DB_HOST: "my-release-postgresql"
-    CUBEJS_DB_USER: "postgres"
-    CUBEJS_DB_PASS: "test123"
-    CUBEJS_DB_NAME: "cicube"
-    CUBEJS_API_SECRET: "test-jwt-secret"
-    CUBEJS_DEV_MODE: "false"
-    CUBEJS_DB_SSL: "true"
-    CUBEJS_DEFAULT_API_SCOPES: "graphql,meta,data,jobs"
-    CUBEJS_CUBESTORE_HOST: "cubestore-router"
-    CUBEJS_LOG_LEVEL: "trace"
-  ingress:
-    enabled: true
-    annotations:
-      cert-manager.io/issuer: "letsencrypt-prod"
-    hosts:
-      - host: cube.cicube.io
-        paths:
-          - path: /
-            pathType: ImplementationSpecific
-    tls:
-      - secretName: cube.cicube.io-tls
-        hosts:
-          - cube.cicube.io
-
-  cubestore:
-    enabled: true
-    persistence:
-      enabled: true
-      size: 10Gi
-      storageClass: "longhorn"
-    router:
-      replicaCount: 2
-      resources:
-        limits:
-          cpu: 1000m
-          memory: 2Gi
-        requests:
-          cpu: 500m
-          memory: 1Gi
-      service:
-        type: ClusterIP
-        port: 9999
-        service_port: 9999
-      configmap:
-        name: cubestore-router-cm
-      env:
-        CUBESTORE_REMOTE_DIR: "/cube/data"
-        CUBESTORE_META_PORT: "9999"
-        CUBESTORE_SERVER_NAME: "cubestore-router:9999"
-        CUBEJS_LOG_LEVEL: "trace"
-    worker:
-      replicaCount: 2
-      resources:
-        limits:
-          cpu: 1000m
-          memory: 2Gi
-        requests:
-          cpu: 500m
-          memory: 1Gi
-      service:
-        type: ClusterIP
-        port: 10001
-        service_port: 10001
-      configmap:
-        name: cubestore-worker-cm
-      env:
-        CUBESTORE_SERVER_NAME: "cubestore-worker-0.cubestore-worker:10001"
-        CUBESTORE_WORKER_PORT: "10001"
-        CUBESTORE_REMOTE_DIR: "/cube/data"
-        CUBESTORE_META_ADDR: "cubestore-router:9999"
-        CUBEJS_LOG_LEVEL: "trace"
 
 postgresql:
   auth:

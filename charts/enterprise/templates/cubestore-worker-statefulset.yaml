@@ -2,23 +2,23 @@
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: {{ .Release.Name }}-cubestore-worker
+  name: cubestore-worker
   labels:
-    app: {{ .Release.Name }}-cubestore-worker
-    {{- include "enterprise.labels" . | nindent 4 }}
+    app: {{ .Release.Name }}
 spec:
-  serviceName: {{ .Release.Name }}-cubestore-worker
-  replicas: {{ .Values.cube.cubestore.worker.replicaCount }}
+  serviceName: cubestore-worker
+  replicas: {{ .Values.cube.cubestore.worker.replicas }}
   selector:
     matchLabels:
-      app: {{ .Release.Name }}-cubestore-worker
+      app: {{ .Release.Name }}
+      cubejsApp: cubestoreWorker
   template:
     metadata:
       labels:
-        app: {{ .Release.Name }}-cubestore-worker
-        {{- include "enterprise.labels" . | nindent 8 }}
+        app: {{ .Release.Name }}
+        cubejsApp: cubestoreWorker
     spec:
-      {{- with .Values.cube.imagePullSecrets }}
+      {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
@@ -29,58 +29,28 @@ spec:
       initContainers:
         - name: init-router
           image: busybox
-          command: ['sh', '-c', 'until nc -vz {{ .Release.Name }}-cubestore-router:{{ .Values.cube.cubestore.router.service.port }}; do echo "Waiting for router"; sleep 2; done;']
+          command: ['sh', '-c', 'until nc -vz cubestore-router:9999; do echo "Waiting for router"; sleep 2; done;']        
       containers:
         - name: cubestore-worker
-          image: "{{ .Values.cube.image.registry }}/{{ .Values.cube.image.repository }}:{{ .Values.cube.image.tag }}"
+          env:
+          - name: POD_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.name
+          - name: CUBESTORE_WORKERS
+            value: {{ $count := .Values.cube.cubestore.worker.replicas | int }}{{- $networkAppPort := .Values.cube.cubestore.worker.service.port -}}
+            {{- range until $count }}cubestore-worker-{{  .  }}.cubestore-worker:{{ $networkAppPort }},
+            {{- end }}
+          envFrom:
+          - configMapRef: 
+              name: {{ .Values.cube.cubestore.worker.configmap.name }}
+          volumeMounts:
+            - mountPath: /cube/data
+              name: cubestore-pv
+          image: {{ .Values.cube.cubestore.worker.image }}
+          imagePullPolicy: {{ .Values.cube.cubestore.worker.pullPolicy }}
           ports:
             - name: http
               containerPort: {{ .Values.cube.cubestore.worker.service.port }}
               protocol: TCP
-          envFrom:
-            - configMapRef:
-                name: {{ .Values.cube.cubestore.worker.configmap.name }}
-          env:
-            - name: POD_NAME
-              valueFrom:
-                fieldRef:
-                  fieldPath: metadata.name
-            - name: CUBESTORE_SERVER_NAME
-              value: "$(POD_NAME).{{ .Release.Name }}-cubestore-worker:{{ .Values.cube.cubestore.worker.service.port }}"
-          resources:
-            {{- toYaml .Values.cube.cubestore.worker.resources | nindent 12 }}
-          volumeMounts:
-            - mountPath: /cube/data
-              name: cubestore-pv
-          livenessProbe:
-            httpGet:
-              path: /readiness
-              port: http
-            initialDelaySeconds: 30
-            periodSeconds: 10
-            timeoutSeconds: 5
-            successThreshold: 1
-            failureThreshold: 3
-          readinessProbe:
-            httpGet:
-              path: /readiness
-              port: http
-            initialDelaySeconds: 30
-            periodSeconds: 10
-            timeoutSeconds: 5
-            successThreshold: 1
-            failureThreshold: 3
-  {{- if .Values.cube.cubestore.persistence.enabled }}
-  volumeClaimTemplates:
-    - metadata:
-        name: data
-      spec:
-        accessModes: [ "ReadWriteOnce" ]
-        {{- if .Values.cube.cubestore.persistence.storageClass }}
-        storageClassName: {{ .Values.cube.cubestore.persistence.storageClass }}
-        {{- end }}
-        resources:
-          requests:
-            storage: {{ .Values.cube.cubestore.persistence.size }}
-  {{- end }}
-{{- end }} 
+{{- end }}

@@ -11,7 +11,8 @@ cubeReplicas:
   cubestoreWorker: 1
 
 image:
-  repository: ghcr.io/ci-cube/cicube-api/cube
+  repository: ghcr.io/ci-cube/cicube-api/api
+  tag: "sha-a19f4d8"
   pullPolicy: IfNotPresent
 
 imagePullSecrets:
@@ -165,11 +166,11 @@ redis:
       size: 8Gi
 
 api:
-  replicaCount: 4
+  replicaCount: 1
   image:
     repository: ghcr.io/ci-cube/cicube-api/api
+    tag: "sha-a19f4d8"
     pullPolicy: IfNotPresent
-    tag: ""
   
   service:
     type: ClusterIP

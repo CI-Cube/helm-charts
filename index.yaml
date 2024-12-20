@@ -3,7 +3,7 @@ entries:
   enterprise:
   - apiVersion: v2
     appVersion: 1.16.0
-    created: "2024-12-20T01:31:21.539987663Z"
+    created: "2024-12-20T01:39:02.401126089Z"
     dependencies:
     - name: postgresql
       repository: https://charts.bitnami.com/bitnami
@@ -12,10 +12,10 @@ entries:
       repository: https://charts.bitnami.com/bitnami
       version: 17.11.3
     description: A Helm chart for running Cubejs in Kubernetes
-    digest: 7a00b1ef75d982b26bb7b404b421e1be689679eb830e2c79e69801c82bbf9a58
+    digest: 76bab2d894295cf2486c9b6ee04959d50dd3a9642928dd1c6cfdfdafb265cc8e
     name: enterprise
     type: application
     urls:
     - https://ci-cube.github.io/helm-charts/enterprise-0.1.0.tgz
     version: 0.1.0
-generated: "2024-12-20T01:31:21.529963495Z"
+generated: "2024-12-20T01:39:02.390392685Z"

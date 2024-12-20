@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cube-api
+  labels:
+    {{- include "enterprise.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.cubeReplicas.cubeApi }}
+  selector:
+    matchLabels:
+      cubejsApp: cubeApi
+  template:
+    metadata:
+      labels:
+        cubejsApp: cubeApi
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: {{ .Chart.Name }}
+          envFrom:
+          - configMapRef:
+              name: {{ .Values.cubeApi.configmap.name }}
+          image: {{ .Values.cubeApi.image }}
+          imagePullPolicy: {{ .Values.cubeApi.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.cubeApi.service.port }}
+              protocol: TCP 

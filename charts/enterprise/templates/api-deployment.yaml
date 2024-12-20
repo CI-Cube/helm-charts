@@ -1,0 +1,97 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "enterprise.fullname" . }}-api
+  labels:
+    {{- include "enterprise.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "enterprise.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "enterprise.selectorLabels" . | nindent 8 }}
+        {{- with .Values.selectorLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "enterprise.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+            - name: DATABASE_HOST
+              value: {{ .Values.DATABASE_HOST | quote }}
+            - name: DATABASE_USER
+              value: {{ .Values.DATABASE_USER | quote }}
+            - name: DATABASE_PASSWORD
+              value: {{ .Values.DATABASE_PASSWORD | quote }}
+            - name: DATABASE_NAME
+              value: {{ .Values.DATABASE_NAME | quote }}
+            - name: REDIS_HOST
+              value: {{ .Release.Name }}-redis-master
+            - name: JWT_SECRET
+              value: {{ .Values.JWT_SECRET | quote }}
+            - name: GITHUB_CLIENT_ID
+              value: {{ .Values.GITHUB_CLIENT_ID | quote }}
+            - name: GITHUB_CLIENT_SECRET
+              value: {{ .Values.GITHUB_CLIENT_SECRET | quote }}
+            - name: GOOGLE_CLIENT_ID
+              value: {{ .Values.GOOGLE_CLIENT_ID | quote }}
+            - name: GOOGLE_CLIENT_SECRET
+              value: {{ .Values.GOOGLE_CLIENT_SECRET | quote }}
+            - name: WEB_URL
+              value: {{ .Values.WEB_URL | quote }}
+            - name: API_URL
+              value: {{ .Values.API_URL | quote }}
+            - name: SMTP_USERNAME
+              value: {{ .Values.SMTP_USERNAME | quote }}
+            - name: SMTP_PASSWORD
+              value: {{ .Values.SMTP_PASSWORD | quote }}
+            - name: CUBE_API_URL
+              value: {{ .Values.CUBE_API_URL | quote }}
+            - name: LOOPS_API_KEY
+              value: {{ .Values.LOOPS_API_KEY | quote }}
+          ports:
+            - name: http
+              containerPort: 80
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }} 

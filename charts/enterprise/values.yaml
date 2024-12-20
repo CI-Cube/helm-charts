@@ -1,0 +1,194 @@
+# Global configurations
+global:
+  # Image pull secrets for all deployments
+  imagePullSecrets:
+    - name: github
+
+  # Database configurations
+  database:
+    type: "postgres"
+    host: ""
+    port: 5432
+    name: ""
+    user: ""
+    password: ""
+    sslMode: "require"
+
+  # Redis configurations
+  redis:
+    host: ""
+    port: 6379
+    password: ""
+
+  # Common configurations
+  domain: "example.com"
+  environment: "production"
+
+# Component enablement
+api:
+  enabled: true
+  image:
+    repository: ghcr.io/ci-cube/cicube-api/api
+    pullPolicy: IfNotPresent
+  ingress:
+    enabled: true
+    annotations:
+      cert-manager.io/issuer: "letsencrypt-prod"
+    hosts:
+      - host: "api.${global.domain}"
+        paths:
+          - path: /
+            pathType: ImplementationSpecific
+    tls:
+      - secretName: "api-tls"
+        hosts:
+          - "api.${global.domain}"
+  
+  # API Secret Values
+  DATABASE_HOST: "${global.database.host}"
+  DATABASE_USER: "${global.database.user}"
+  DATABASE_PASSWORD: "${global.database.password}"
+  DATABASE_NAME: "${global.database.name}"
+  REDIS_HOST: "${global.redis.host}"
+  REDIS_PORT: "${global.redis.port}"
+  JWT_SECRET: ""
+  GITHUB_CLIENT_ID: ""
+  GITHUB_CLIENT_SECRET: ""
+  GOOGLE_CLIENT_ID: ""
+  GOOGLE_CLIENT_SECRET: ""
+  WEB_URL: "https://app.${global.domain}"
+  API_URL: "https://api.${global.domain}"
+  SMTP_USERNAME: ""
+  SMTP_PASSWORD: ""
+  CUBE_API_URL: "http://cube-api.default.svc.cluster.local:4000/cubejs-api/v1"
+  LOOPS_API_KEY: ""
+
+cubejs:
+  enabled: true
+  annotations: 
+    reloader.stakater.com/auto: "true"
+  
+  image:
+    repository: ghcr.io/ci-cube/cicube-api/cube
+    pullPolicy: IfNotPresent
+  
+  imagePullSecrets:
+    - name: github
+  
+  ingress:
+    enabled: true
+    annotations:
+      cert-manager.io/issuer: "letsencrypt-prod"
+    hosts:
+      - host: "cube.${global.domain}"
+        paths:
+          - path: /
+            pathType: ImplementationSpecific
+    tls:
+      - secretName: "cube-tls"
+        hosts:
+          - "cube.${global.domain}"
+
+  cubeApi:
+    image: ghcr.io/ci-cube/cicube-api/cube
+    pullPolicy: Always
+    service:
+      type: ClusterIP
+      port: 4000
+      service_port: 4000
+    replicas: 3
+    configmap:
+      name: cubeapi-cm
+    env:
+      var:
+        CUBEJS_DB_TYPE: "${global.database.type}"
+        CUBEJS_DB_HOST: "${global.database.host}"
+        CUBEJS_DB_NAME: "${global.database.name}"
+        CUBEJS_DB_USER: "${global.database.user}"
+        CUBEJS_DB_PASS: "${global.database.password}"
+        CUBEJS_DB_SSL: "${global.database.sslMode}"
+        CUBEJS_DEV_MODE: "false"
+        CUBEJS_DEFAULT_API_SCOPES: "graphql,meta,data,jobs"
+        CUBEJS_CUBESTORE_HOST: "cubestore-router"
+        CUBEJS_LOG_LEVEL: "trace"
+
+  cubeRefreshWorker:
+    image: ghcr.io/ci-cube/cicube-api/cube
+    pullPolicy: Always
+    service:
+      type: ClusterIP
+      port: 80
+      service_port: 80
+    replicas: 1
+    configmap:
+      name: cuberefreshworker-cm
+    env:
+      var:
+        CUBEJS_DB_TYPE: "${global.database.type}"
+        CUBEJS_DB_HOST: "${global.database.host}"
+        CUBEJS_DB_NAME: "${global.database.name}"
+        CUBEJS_DB_USER: "${global.database.user}"
+        CUBEJS_DB_PASS: "${global.database.password}"
+        CUBEJS_DB_SSL: "${global.database.sslMode}"
+        CUBEJS_DEV_MODE: "false"
+        CUBEJS_REFRESH_WORKER: "true"
+        CUBEJS_LOG_LEVEL: "trace"
+
+  cubestoreRouter:
+    image: "cubejs/cubestore:latest"
+    pullPolicy: IfNotPresent
+    service:
+      type: ClusterIP
+      port: 9999
+      service_port: 9999
+    replicas: 2
+    configmap:
+      name: cubestorerouter-cm
+    env:
+      var:
+        CUBESTORE_REMOTE_DIR: "/cube/data"
+        CUBESTORE_META_PORT: "9999"
+        CUBESTORE_SERVER_NAME: "cubestore-router:9999"
+        CUBEJS_LOG_LEVEL: "trace"
+
+  cubestoreWorker:
+    image: "cubejs/cubestore:latest"
+    pullPolicy: IfNotPresent
+    service:
+      type: ClusterIP
+      port: 10001
+      service_port: 10001
+    replicas: 2
+    configmap:
+      name: cubestoreworker-cm
+    env:
+      var:
+        CUBESTORE_SERVER_NAME: "cubestore-worker-0.cubestore-worker:10001"
+        CUBESTORE_WORKER_PORT: "10001"
+        CUBESTORE_REMOTE_DIR: "/cube/data"
+        CUBESTORE_META_ADDR: "cubestore-router:9999"
+        CUBEJS_LOG_LEVEL: "trace"
+
+# PostgreSQL configuration
+postgresql:
+  enabled: false  # Optional database
+  auth:
+    username: "${global.database.user}"
+    password: "${global.database.password}"
+    database: "${global.database.name}"
+  primary:
+    persistence:
+      enabled: true
+      size: 10Gi
+
+# Redis configuration
+redis:
+  enabled: false  # Optional Redis
+  architecture: standalone
+  auth:
+    enabled: true
+    password: "${global.redis.password}"
+  master:
+    persistence:
+      enabled: true
+      size: 5Gi

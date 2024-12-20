@@ -3,7 +3,7 @@ kind: Service
 metadata:
   name: cube-api
   labels:
-    {{- include "chart.labels" . | nindent 4 }}
+    {{- include "enterprise.labels" . | nindent 4 }}
 spec:
   type: {{ .Values.cubeApi.service.type }}
   ports:

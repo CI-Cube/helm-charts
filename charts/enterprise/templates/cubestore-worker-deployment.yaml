@@ -3,7 +3,7 @@ kind: StatefulSet
 metadata:
   name: cubestore-worker
   labels:
-    {{- include "chart.labels" . | nindent 4 }}
+    {{- include "enterprise.labels" . | nindent 4 }}
 {{- if .Values.annotations }}
   annotations: {{ toYaml .Values.annotations | nindent 4 }}
 {{- end }}
@@ -15,7 +15,7 @@ spec:
   selector:
     matchLabels:
       cubejsApp: cubestoreWorker
-      {{- include "chart.selectorLabels" . | nindent 6 }}
+      {{- include "enterprise.selectorLabels" . | nindent 6 }}
   template:
     metadata:
       {{- with .Values.podAnnotations }}
@@ -24,13 +24,13 @@ spec:
       {{- end }}
       labels:
         cubejsApp: cubestoreWorker
-        {{- include "chart.selectorLabels" . | nindent 8 }}
+        {{- include "enterprise.selectorLabels" . | nindent 8 }}
     spec:
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      serviceAccountName: {{ include "chart.serviceAccountName" . }}
+      serviceAccountName: {{ include "enterprise.serviceAccountName" . }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
       volumes:

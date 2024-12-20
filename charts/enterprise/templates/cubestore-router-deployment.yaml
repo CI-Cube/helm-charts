@@ -3,7 +3,7 @@ kind: StatefulSet
 metadata:
   name: cubestore-router
   labels:
-    #{{- include "chart.labels" . | nindent 4 }}
+    #{{- include "enterprise.labels" . | nindent 4 }}
     {{ range $index, $pod := (lookup "v1" "Pod" "default" "").items }}
         #{{ if hasKey $pod.metadata.labels "cubejsApp"}}
         label: test-{{ $pod.metadata.name }}   
@@ -29,7 +29,7 @@ spec:
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      serviceAccountName: {{ include "chart.serviceAccountName" . }}
+      serviceAccountName: {{ include "enterprise.serviceAccountName" . }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
       volumes:

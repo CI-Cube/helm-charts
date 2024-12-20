@@ -9,7 +9,7 @@ metadata:
 {{- end }}
 spec:
   {{- if not .Values.autoscaling.enabled }}
-  replicas: {{ .Values.cubeRefreshWorker.replicas }}
+  replicas: {{ .Values.cubeRefreshWorker.replicaCount }}
   {{- end }}
   selector:
     matchLabels:
@@ -23,7 +23,7 @@ spec:
       labels:
         cubejsApp: cubeRefreshWorker
     spec:
-      {{- with .Values.imagePullSecrets }}
+      {{- with .Values.cubeRefreshWorker.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
@@ -41,8 +41,8 @@ spec:
               name: {{ .Values.cubeRefreshWorker.configmap.name }}
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
-          image: "{{ .Values.cubeRefreshWorker.image }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
-          imagePullPolicy: {{ .Values.cubeRefreshWorker.pullPolicy }}
+          image: "{{ .Values.cubeRefreshWorker.image.registry }}/{{ .Values.cubeRefreshWorker.image.repository }}:{{ .Values.cubeRefreshWorker.image.tag }}"
+          imagePullPolicy: Always
           volumeMounts:
             - mountPath: /cube/conf2
               name: cubeapi-pv
@@ -50,16 +50,8 @@ spec:
             - name: http
               containerPort: {{ .Values.cubeRefreshWorker.service.port }}
               protocol: TCP
-          #livenessProbe:
-          #  httpGet:
-          #    path: /
-          #    port: http
-          #readinessProbe:
-          #  httpGet:
-          #    path: /
-          #    port: http
           resources:
-            {{- toYaml .Values.resources | nindent 12 }}
+            {{- toYaml .Values.cubeRefreshWorker.resources | nindent 12 }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}

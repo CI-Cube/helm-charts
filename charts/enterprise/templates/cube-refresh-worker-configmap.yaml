@@ -1,9 +1,11 @@
 apiVersion: v1
 data:
-  {{- range $key, $val := .Values.cubeRefreshWorker.env.var }}
+  {{- range $key, $val := .Values.cubeRefreshWorker.env }}
   {{ $key }}: {{ $val | quote }}
   {{- end}}
 
 kind: "ConfigMap"
 metadata:
   name: {{ .Values.cubeRefreshWorker.configmap.name }}
+  labels:
+    {{- include "enterprise.labels" . | nindent 4 }}

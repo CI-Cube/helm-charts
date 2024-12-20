@@ -1,9 +1,11 @@
 apiVersion: v1
 data:
-  {{- range $key, $val := .Values.cubestoreWorker.env.var }}
+  {{- range $key, $val := .Values.cubestoreWorker.env }}
   {{ $key }}: {{ $val | quote }}
   {{- end}}
 
 kind: "ConfigMap"
 metadata:
   name: {{ .Values.cubestoreWorker.configmap.name }}
+  labels:
+    {{- include "enterprise.labels" . | nindent 4 }}

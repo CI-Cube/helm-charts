@@ -3,16 +3,12 @@ kind: StatefulSet
 metadata:
   name: cubestore-router
   labels:
-    #{{- include "enterprise.labels" . | nindent 4 }}
-    {{ range $index, $pod := (lookup "v1" "Pod" "default" "").items }}
-        #{{ if hasKey $pod.metadata.labels "cubejsApp"}}
-        label: test-{{ $pod.metadata.name }}   
-        #{{ end }}
-    {{ end }}
+    {{- include "enterprise.labels" . | nindent 4 }}
 {{- if .Values.annotations }}
   annotations: {{ toYaml .Values.annotations | nindent 4 }}
 {{- end }}
 spec:
+  serviceName: cubestore-router
   {{- if not .Values.autoscaling.enabled }}
   replicas: {{ .Values.cubestoreRouter.replicas }}
   {{- end }}
@@ -24,7 +20,6 @@ spec:
       labels:
         cubejsApp: cubestoreRouter
     spec:
-      serviceName: cubestore-router
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
@@ -35,21 +30,17 @@ spec:
       volumes:
         - name: cubestore-pv
           persistentVolumeClaim:
-            claimName: cubestore-pvc  
+            claimName: cubestore-pvc
       containers:
-        - name: {{ .Chart.Name }}
+        - name: cubestore-router
           env:
           - name: CUBESTORE_WORKERS
             value: {{ $count := .Values.cubestoreWorker.replicas | int }}{{- $networkAppPort  := .Values.cubestoreWorker.service.port -}}
             {{- range until $count }}cubestore-worker-{{  .  }}.cubestore-worker:{{ $networkAppPort }},
             {{- end }}
           envFrom:
-          - configMapRef: 
+          - configMapRef:
               name: {{ .Values.cubestoreRouter.configmap.name }}
-          #lifecycle:
-          #  postStart:
-          #    exec:
-          #      command: [ "unset ", "CUBESTORE_WORKER_PORT" ]
           command: ["/bin/sh","-c"]
           args: ["unset CUBESTORE_WORKER_PORT; ./cubestored"]
           volumeMounts:
@@ -69,16 +60,8 @@ spec:
             - name: mysql
               containerPort: 3306
               protocol: TCP   
-          #livenessProbe:
-          #  httpGet:
-          #    path: /
-          #    port: http
-          #readinessProbe:
-          #  httpGet:
-          #    path: /
-          #    port: http
           resources:
-            {{- toYaml .Values.resources | nindent 12 }}
+            {{- toYaml .Values.cubestoreRouter.resources | nindent 12 }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}

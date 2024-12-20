@@ -2,7 +2,7 @@ apiVersion: v1
 entries:
   enterprise:
   - apiVersion: v2
-    created: "2024-12-20T00:39:19.176060679Z"
+    created: "2024-12-20T00:47:29.777772785Z"
     dependencies:
     - name: redis
       repository: https://charts.bitnami.com/bitnami
@@ -11,10 +11,10 @@ entries:
       repository: https://charts.bitnami.com/bitnami
       version: 12.x.x
     description: Enterprise Helm chart for deploying the complete application stack
-    digest: 23a48d4926935b1d1ca3e0cce827c8d1c598437ed982ed31738590fbdde5756f
+    digest: bebf84f070726f4c391e4af8a306ff7bda8e503ab9c5dd9681825ffb5c0e1acf
     name: enterprise
     type: application
     urls:
     - https://ci-cube.github.io/helm-charts/enterprise-0.1.0.tgz
     version: 0.1.0
-generated: "2024-12-20T00:39:19.165354449Z"
+generated: "2024-12-20T00:47:29.767289157Z"

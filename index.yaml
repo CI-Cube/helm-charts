@@ -1,0 +1,27 @@
+apiVersion: v1
+entries:
+  halley-enterprise:
+  - apiVersion: v2
+    appVersion: 1.0.0
+    created: "2024-12-20T18:07:51.370931387Z"
+    dependencies:
+    - condition: api.enabled
+      name: api
+      repository: file://charts/api
+      version: '*'
+    - condition: cubejs.enabled
+      name: cubejs
+      repository: file://charts/cubejs
+      version: '*'
+    - condition: postgresql.enabled
+      name: postgresql
+      repository: https://charts.bitnami.com/bitnami
+      version: 12.5.5
+    description: Enterprise Helm chart for Halley SaaS platform
+    digest: 628b18c390c69e03d8cbea672bd244ef4b3f3664fae18b042c3c620331581208
+    name: halley-enterprise
+    type: application
+    urls:
+    - https://ci-cube.github.io/helm-charts/halley-enterprise-0.1.1.tgz
+    version: 0.1.1
+generated: "2024-12-20T18:07:51.351283543Z"

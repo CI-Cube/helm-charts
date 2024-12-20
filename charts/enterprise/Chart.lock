@@ -1,0 +1,12 @@
+dependencies:
+- name: api
+  repository: file://charts/api
+  version: 0.1.0
+- name: cubejs
+  repository: file://charts/cubejs
+  version: 0.1.0
+- name: postgresql
+  repository: https://charts.bitnami.com/bitnami
+  version: 12.5.5
+digest: sha256:bfd812f23823d8b9b70cec05f653336c0497fac12730b0ad2917911a7c720b91
+generated: "2024-12-20T09:56:32.087926-08:00"

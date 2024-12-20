@@ -1,68 +1,53 @@
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: {{ include "chart.fullname" . }}-cubestore-router
+  name: cubestore-router
   labels:
-    app.kubernetes.io/name: {{ include "chart.name" . }}
-    app.kubernetes.io/instance: {{ .Release.Name }}
-    app.kubernetes.io/component: cubestore-router
-    {{- if .Chart.AppVersion }}
-    app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
-    {{- end }}
-    app.kubernetes.io/managed-by: {{ .Release.Service }}
-  {{- with .Values.cubestoreRouter.annotations }}
-  annotations:
-    {{- toYaml . | nindent 4 }}
-  {{- end }}
+    {{- include "chart.labels" . | nindent 4 }}
+{{- if .Values.annotations }}
+  annotations: {{ toYaml .Values.annotations | nindent 4 }}
+{{- end }}
 spec:
-  serviceName: {{ include "chart.fullname" . }}-cubestore-router
-  replicas: {{ .Values.cubestoreRouter.replicas | default 2 }}
+  serviceName: cubestore-router
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.cubestoreRouter.replicas }}
+  {{- end }}
   selector:
     matchLabels:
-      app.kubernetes.io/name: {{ include "chart.name" . }}
-      app.kubernetes.io/instance: {{ .Release.Name }}
-      app.kubernetes.io/component: cubestore-router
+      cubejsApp: cubestoreRouter
   template:
     metadata:
       labels:
-        app.kubernetes.io/name: {{ include "chart.name" . }}
-        app.kubernetes.io/instance: {{ .Release.Name }}
-        app.kubernetes.io/component: cubestore-router
+        cubejsApp: cubestoreRouter
     spec:
-      serviceAccountName: {{ include "chart.serviceAccountName" . }}
-      {{- with .Values.cubestoreRouter.podSecurityContext }}
-      securityContext:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+      serviceAccountName: {{ include "chart.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
       volumes:
         - name: cubestore-pv
           persistentVolumeClaim:
-            claimName: {{ include "chart.fullname" . }}-cubestore-pvc
+            claimName: cubestore-pvc  
       containers:
-        - name: cubestore-router
+        - name: {{ .Chart.Name }}
           env:
-            - name: CUBESTORE_WORKERS
-              value: |-
-                {{- $fullname := include "chart.fullname" . -}}
-                {{- $replicas := .Values.cubestoreWorker.replicas | default 2 | int -}}
-                {{- $port := .Values.cubestoreWorker.service.port -}}
-                {{- $workers := list -}}
-                {{- range $i := until $replicas -}}
-                  {{- $workers = append $workers (printf "%s-cubestore-worker-%d.%s-cubestore-worker:%d" $fullname $i $fullname $port) -}}
-                {{- end -}}
-                {{ join "," $workers }}
+          - name: CUBESTORE_WORKERS
+            value: {{ $count := .Values.cubestoreWorker.replicas | int }}{{- $networkAppPort  := .Values.cubestoreWorker.service.port -}}
+            {{- range until $count }}cubestore-worker-{{  .  }}.cubestore-worker:{{ $networkAppPort }},
+            {{- end }}
           envFrom:
-            - configMapRef:
-                name: {{ include "chart.fullname" . }}-{{ .Values.cubestoreRouter.configmap.name }}
-          command: ["/bin/sh", "-c"]
+          - configMapRef: 
+              name: {{ .Values.cubestoreRouter.configmap.name }}
+          command: ["/bin/sh","-c"]
           args: ["unset CUBESTORE_WORKER_PORT; ./cubestored"]
           volumeMounts:
             - mountPath: /cube/data
               name: cubestore-pv
-          {{- with .Values.cubestoreRouter.securityContext }}
           securityContext:
-            {{- toYaml . | nindent 12 }}
-          {{- end }}
+            {{- toYaml .Values.securityContext | nindent 12 }}
           image: {{ .Values.cubestoreRouter.image | quote }}
           imagePullPolicy: {{ .Values.cubestoreRouter.pullPolicy }}
           ports:
@@ -75,19 +60,17 @@ spec:
             - name: mysql
               containerPort: 3306
               protocol: TCP   
-          {{- with .Values.cubestoreRouter.resources }}
           resources:
-            {{- toYaml . | nindent 12 }}
-          {{- end }}
-      {{- with .Values.cubestoreRouter.nodeSelector }}
+            {{- toYaml .Values.resources | nindent 12 }}
+      {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- with .Values.cubestoreRouter.affinity }}
+      {{- with .Values.affinity }}
       affinity:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- with .Values.cubestoreRouter.tolerations }}
+      {{- with .Values.tolerations }}
       tolerations:
         {{- toYaml . | nindent 8 }}
       {{- end }}

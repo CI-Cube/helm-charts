@@ -68,13 +68,32 @@ cubejs:
   annotations: 
     reloader.stakater.com/auto: "true"
   
-  image:
-    repository: ghcr.io/ci-cube/cicube-api/cube
-    pullPolicy: IfNotPresent
-  
   imagePullSecrets:
     - name: github
-  
+
+  nameOverride: ""
+  fullnameOverride: ""
+
+  serviceAccount:
+    create: true
+    annotations: {}
+    name: ""
+
+  podAnnotations: {}
+  podSecurityContext: {}
+  securityContext: {}
+
+  resources: {}
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+
+  autoscaling:
+    enabled: false
+    minReplicas: 1
+    maxReplicas: 100
+    targetCPUUtilizationPercentage: 80
+
   ingress:
     enabled: true
     annotations:

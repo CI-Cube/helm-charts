@@ -3,7 +3,7 @@ entries:
   halley-enterprise:
   - apiVersion: v2
     appVersion: 1.0.0
-    created: "2024-12-20T16:54:55.136988035Z"
+    created: "2024-12-20T16:58:17.442605239Z"
     dependencies:
     - condition: api.enabled
       name: api
@@ -22,10 +22,10 @@ entries:
       repository: https://charts.bitnami.com/bitnami
       version: 17.11.3
     description: Enterprise Helm chart for Halley SaaS platform
-    digest: d81234ec3f17f1b20bdac7f05b4a28da467f92130bc638c4cae4de9ffe278d3c
+    digest: 164d8ba32f3d313df6572daae705c65fbf9c4b75ad7c6d22e9affdced5f2dfb1
     name: halley-enterprise
     type: application
     urls:
     - https://ci-cube.github.io/helm-charts/halley-enterprise-0.1.1.tgz
     version: 0.1.1
-generated: "2024-12-20T16:54:55.113126562Z"
+generated: "2024-12-20T16:58:17.419528233Z"

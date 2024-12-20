@@ -2,19 +2,20 @@ apiVersion: v1
 entries:
   enterprise:
   - apiVersion: v2
-    created: "2024-12-20T00:47:29.777772785Z"
+    appVersion: 1.16.0
+    created: "2024-12-20T01:18:01.392865298Z"
     dependencies:
-    - name: redis
-      repository: https://charts.bitnami.com/bitnami
-      version: 17.x.x
     - name: postgresql
       repository: https://charts.bitnami.com/bitnami
-      version: 12.x.x
-    description: Enterprise Helm chart for deploying the complete application stack
-    digest: bebf84f070726f4c391e4af8a306ff7bda8e503ab9c5dd9681825ffb5c0e1acf
+      version: 12.5.7
+    - name: redis
+      repository: https://charts.bitnami.com/bitnami
+      version: 17.11.3
+    description: A Helm chart for running Cubejs in Kubernetes
+    digest: 33a5abbcebe765473cd8e3ac44ccae196554c3140571908642dfe3d9908d55cb
     name: enterprise
     type: application
     urls:
     - https://ci-cube.github.io/helm-charts/enterprise-0.1.0.tgz
     version: 0.1.0
-generated: "2024-12-20T00:47:29.767289157Z"
+generated: "2024-12-20T01:18:01.383023036Z"

@@ -4,63 +4,28 @@ metadata:
   name: cube-refresh-worker
   labels:
     {{- include "enterprise.labels" . | nindent 4 }}
-{{- if .Values.annotations }}
-  annotations: {{ toYaml .Values.annotations | nindent 4 }}
-{{- end }}
 spec:
-  {{- if not .Values.autoscaling.enabled }}
-  replicas: {{ .Values.cubeRefreshWorker.replicaCount }}
-  {{- end }}
+  replicas: {{ .Values.cubeReplicas.cubeRefreshWorker }}
   selector:
     matchLabels:
       cubejsApp: cubeRefreshWorker
   template:
     metadata:
-      {{- with .Values.podAnnotations }}
-      annotations:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
       labels:
         cubejsApp: cubeRefreshWorker
     spec:
-      {{- with .Values.cubeRefreshWorker.imagePullSecrets }}
+      {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      serviceAccountName: {{ include "enterprise.serviceAccountName" . }}
-      securityContext:
-        {{- toYaml .Values.podSecurityContext | nindent 8 }}
-      volumes:
-        - name: cubeapi-pv
-          persistentVolumeClaim:
-            claimName: cubeapi-pvc
       containers:
         - name: {{ .Chart.Name }}
           envFrom:
-          - configMapRef: 
+          - configMapRef:
               name: {{ .Values.cubeRefreshWorker.configmap.name }}
-          securityContext:
-            {{- toYaml .Values.securityContext | nindent 12 }}
-          image: "{{ .Values.cubeRefreshWorker.image.registry }}/{{ .Values.cubeRefreshWorker.image.repository }}:{{ .Values.cubeRefreshWorker.image.tag }}"
-          imagePullPolicy: Always
-          volumeMounts:
-            - mountPath: /cube/conf2
-              name: cubeapi-pv
+          image: {{ .Values.cubeRefreshWorker.image }}
+          imagePullPolicy: {{ .Values.cubeRefreshWorker.pullPolicy }}
           ports:
             - name: http
               containerPort: {{ .Values.cubeRefreshWorker.service.port }}
-              protocol: TCP
-          resources:
-            {{- toYaml .Values.cubeRefreshWorker.resources | nindent 12 }}
-      {{- with .Values.nodeSelector }}
-      nodeSelector:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-      {{- with .Values.affinity }}
-      affinity:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-      {{- with .Values.tolerations }}
-      tolerations:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
+              protocol: TCP 

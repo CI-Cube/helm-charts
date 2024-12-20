@@ -1,12 +1,17 @@
 apiVersion: v2
 name: enterprise
-description: Enterprise Helm chart for deploying the complete application stack
-version: 0.1.0
+description: A Helm chart for running Cubejs in Kubernetes 
+
 type: application
+
+version: 0.1.0
+
+appVersion: "1.16.0"
+
 dependencies:
-  - name: redis
-    version: "17.x.x"
-    repository: https://charts.bitnami.com/bitnami
   - name: postgresql
-    version: "12.x.x"
-    repository: https://charts.bitnami.com/bitnami 
+    version: 12.5.7
+    repository: https://charts.bitnami.com/bitnami
+  - name: redis
+    version: 17.11.3
+    repository: https://charts.bitnami.com/bitnami

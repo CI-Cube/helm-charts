@@ -1,53 +1,97 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ .Release.Name }}-api
+  name: {{ include "enterprise.fullname" . }}-api
   labels:
-    app: {{ .Release.Name }}-api
     {{- include "enterprise.labels" . | nindent 4 }}
 spec:
-  replicas: {{ .Values.api.replicaCount }}
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
   selector:
     matchLabels:
-      app: {{ .Release.Name }}-api
+      {{- include "enterprise.selectorLabels" . | nindent 6 }}
   template:
     metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       labels:
-        app: {{ .Release.Name }}-api
-        {{- include "enterprise.labels" . | nindent 8 }}
+        {{- include "enterprise.selectorLabels" . | nindent 8 }}
+        {{- with .Values.selectorLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
     spec:
-      {{- with .Values.api.imagePullSecrets }}
+      {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+      serviceAccountName: {{ include "enterprise.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
       containers:
-        - name: api
-          image: "{{ .Values.api.image.registry }}/{{ .Values.api.image.repository }}:{{ .Values.api.image.tag }}"
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+            - name: DATABASE_HOST
+              value: {{ .Values.DATABASE_HOST | quote }}
+            - name: DATABASE_USER
+              value: {{ .Values.DATABASE_USER | quote }}
+            - name: DATABASE_PASSWORD
+              value: {{ .Values.DATABASE_PASSWORD | quote }}
+            - name: DATABASE_NAME
+              value: {{ .Values.DATABASE_NAME | quote }}
+            - name: REDIS_HOST
+              value: {{ .Release.Name }}-redis-master
+            - name: JWT_SECRET
+              value: {{ .Values.JWT_SECRET | quote }}
+            - name: GITHUB_CLIENT_ID
+              value: {{ .Values.GITHUB_CLIENT_ID | quote }}
+            - name: GITHUB_CLIENT_SECRET
+              value: {{ .Values.GITHUB_CLIENT_SECRET | quote }}
+            - name: GOOGLE_CLIENT_ID
+              value: {{ .Values.GOOGLE_CLIENT_ID | quote }}
+            - name: GOOGLE_CLIENT_SECRET
+              value: {{ .Values.GOOGLE_CLIENT_SECRET | quote }}
+            - name: WEB_URL
+              value: {{ .Values.WEB_URL | quote }}
+            - name: API_URL
+              value: {{ .Values.API_URL | quote }}
+            - name: SMTP_USERNAME
+              value: {{ .Values.SMTP_USERNAME | quote }}
+            - name: SMTP_PASSWORD
+              value: {{ .Values.SMTP_PASSWORD | quote }}
+            - name: CUBE_API_URL
+              value: {{ .Values.CUBE_API_URL | quote }}
+            - name: LOOPS_API_KEY
+              value: {{ .Values.LOOPS_API_KEY | quote }}
           ports:
             - name: http
-              containerPort: 3001
-          resources:
-            {{- toYaml .Values.api.resources | nindent 12 }}
-          env:
-            {{- range $key, $value := .Values.api.env }}
-            - name: {{ $key }}
-              value: {{ $value | quote }}
-            {{- end }}
+              containerPort: 80
+              protocol: TCP
           livenessProbe:
             httpGet:
-              path: /test/test
+              path: /health
               port: http
-            initialDelaySeconds: 30
-            periodSeconds: 10
-            timeoutSeconds: 5
-            successThreshold: 1
-            failureThreshold: 3
           readinessProbe:
             httpGet:
-              path: /test/test
+              path: /health
               port: http
-            initialDelaySeconds: 30
-            periodSeconds: 10
-            timeoutSeconds: 5
-            successThreshold: 1
-            failureThreshold: 3 
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }} 

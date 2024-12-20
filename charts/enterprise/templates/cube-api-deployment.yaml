@@ -4,63 +4,28 @@ metadata:
   name: cube-api
   labels:
     {{- include "enterprise.labels" . | nindent 4 }}
-{{- if .Values.cubeApi.annotations }}
-  annotations: {{ toYaml .Values.cubeApi.annotations | nindent 4 }}
-{{- end }}
 spec:
-  {{- if not .Values.autoscaling.enabled }}
-  replicas: {{ .Values.cubeApi.replicaCount }}
-  {{- end }}
+  replicas: {{ .Values.cubeReplicas.cubeApi }}
   selector:
     matchLabels:
       cubejsApp: cubeApi
   template:
     metadata:
-      {{- with .Values.podAnnotations }}
-      annotations:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
       labels:
         cubejsApp: cubeApi
     spec:
-      {{- with .Values.cubeApi.imagePullSecrets }}
-      imagePullSecrets: 
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      serviceAccountName: {{ include "enterprise.serviceAccountName" . }}
-      securityContext:
-        {{- toYaml .Values.podSecurityContext | nindent 8 }}
-      volumes:
-        - name: cubeapi-pv
-          persistentVolumeClaim:
-            claimName: cubeapi-pvc
       containers:
         - name: {{ .Chart.Name }}
           envFrom:
           - configMapRef:
               name: {{ .Values.cubeApi.configmap.name }}
-          securityContext:
-            {{- toYaml .Values.securityContext | nindent 12 }}
-          image: "{{ .Values.cubeApi.image.registry }}/{{ .Values.cubeApi.image.repository }}:{{ .Values.cubeApi.image.tag }}"
-          imagePullPolicy: Always
-          volumeMounts:
-            - mountPath: /cube/conf2
-              name: cubeapi-pv
+          image: {{ .Values.cubeApi.image }}
+          imagePullPolicy: {{ .Values.cubeApi.pullPolicy }}
           ports:
             - name: http
               containerPort: {{ .Values.cubeApi.service.port }}
-              protocol: TCP
-          resources:
-            {{- toYaml .Values.cubeApi.resources | nindent 12 }}
-      {{- with .Values.nodeSelector }}
-      nodeSelector:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-      {{- with .Values.affinity }}
-      affinity:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-      {{- with .Values.tolerations }}
-      tolerations:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
+              protocol: TCP 

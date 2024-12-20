@@ -1,91 +1,75 @@
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: cubestore-worker
+  name: {{ include "chart.fullname" . }}-cubestore-worker
   labels:
-    {{- include "chart.labels" . | nindent 4 }}
-{{- if .Values.annotations }}
-  annotations: {{ toYaml .Values.annotations | nindent 4 }}
-{{- end }}
-spec:
-  serviceName: cubestore-worker
-  {{- if not .Values.autoscaling.enabled }}
-  replicas: {{ .Values.cubestoreWorker.replicas }}
+    app.kubernetes.io/name: {{ include "chart.name" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/component: cubestore-worker
+    {{- if .Chart.AppVersion }}
+    app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
+    {{- end }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+  {{- with .Values.cubestoreWorker.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
   {{- end }}
+spec:
+  serviceName: {{ include "chart.fullname" . }}-cubestore-worker
+  replicas: {{ .Values.cubestoreWorker.replicas | default 2 }}
   selector:
     matchLabels:
-      cubejsApp: cubestoreWorker
-      {{- include "chart.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/name: {{ include "chart.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+      app.kubernetes.io/component: cubestore-worker
   template:
     metadata:
-      {{- with .Values.podAnnotations }}
-      annotations:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
       labels:
-        cubejsApp: cubestoreWorker
-        {{- include "chart.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/name: {{ include "chart.name" . }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+        app.kubernetes.io/component: cubestore-worker
     spec:
-      {{- with .Values.imagePullSecrets }}
-      imagePullSecrets:
+      serviceAccountName: {{ include "chart.serviceAccountName" . }}
+      {{- with .Values.cubestoreWorker.podSecurityContext }}
+      securityContext:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      serviceAccountName: {{ include "chart.serviceAccountName" . }}
-      securityContext:
-        {{- toYaml .Values.podSecurityContext | nindent 8 }}
       volumes:
         - name: cubestore-pv
           persistentVolumeClaim:
-            claimName: cubestore-pvc
-      initContainers:
-        - name: init-router
-          image: busybox
-          command: ['sh', '-c', 'until nc -vz cubestore-router:9999; do echo "Waiting for router"; sleep 2; done;']        
+            claimName: {{ include "chart.fullname" . }}-cubestore-pvc
       containers:
-        - env:
-          - name: POD_NAME
-            valueFrom:
-              fieldRef:
-                fieldPath: metadata.name
-          name: {{ .Chart.Name }}
-          env:
-          - name: CUBESTORE_WORKERS
-            value: {{ $count := .Values.cubestoreWorker.replicas | int }}{{- $networkAppPort  := .Values.cubestoreWorker.service.port -}}
-            {{- range until $count }}cubestore-worker-{{  .  }}.cubestore-worker:{{ $networkAppPort }},
-            {{- end }}
+        - name: cubestore-worker
           envFrom:
-          - configMapRef: 
-              name: {{ .Values.cubestoreWorker.configmap.name }}
+            - configMapRef:
+                name: {{ include "chart.fullname" . }}-{{ .Values.cubestoreWorker.configmap.name }}
+          command: ["./cubestored"]
           volumeMounts:
             - mountPath: /cube/data
               name: cubestore-pv
+          {{- with .Values.cubestoreWorker.securityContext }}
           securityContext:
-            {{- toYaml .Values.securityContext | nindent 12 }}
-          image: "{{ .Values.cubestoreWorker.image }}"
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          image: {{ .Values.cubestoreWorker.image | quote }}
           imagePullPolicy: {{ .Values.cubestoreWorker.pullPolicy }}
           ports:
             - name: http
               containerPort: {{ .Values.cubestoreWorker.service.port }}
               protocol: TCP
-          #livenessProbe:
-          #  httpGet:
-          #    path: /
-          #    port: http
-          #readinessProbe:
-          #  httpGet:
-          #    path: /
-          #    port: http
+          {{- with .Values.cubestoreWorker.resources }}
           resources:
-            {{- toYaml .Values.resources | nindent 12 }}
-      {{- with .Values.nodeSelector }}
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+      {{- with .Values.cubestoreWorker.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- with .Values.affinity }}
+      {{- with .Values.cubestoreWorker.affinity }}
       affinity:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- with .Values.tolerations }}
+      {{- with .Values.cubestoreWorker.tolerations }}
       tolerations:
         {{- toYaml . | nindent 8 }}
       {{- end }}

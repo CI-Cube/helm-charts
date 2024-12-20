@@ -1,74 +1,70 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: cube-api
+  name: {{ include "chart.fullname" . }}-cube-api
   labels:
-    {{- include "chart.labels" . | nindent 4 }}
-{{- if .Values.annotations }}
-  annotations: {{ toYaml .Values.annotations | nindent 4 }}
-{{- end }}
-spec:
-  {{- if not .Values.autoscaling.enabled }}
-  replicas: {{ .Values.cubeApi.replicas }}
+    app.kubernetes.io/name: {{ include "chart.name" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/component: cube-api
+    {{- if .Chart.AppVersion }}
+    app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
+    {{- end }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+  {{- with .Values.cubeApi.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
   {{- end }}
+spec:
+  replicas: {{ .Values.cubeApi.replicas | default 1 }}
   selector:
     matchLabels:
-      cubejsApp: cubeApi
+      app.kubernetes.io/name: {{ include "chart.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+      app.kubernetes.io/component: cube-api
   template:
     metadata:
-      {{- with .Values.podAnnotations }}
-      annotations:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
       labels:
-        cubejsApp: cubeApi
+        app.kubernetes.io/name: {{ include "chart.name" . }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+        app.kubernetes.io/component: cube-api
     spec:
-      {{- with .Values.imagePullSecrets }}
-      imagePullSecrets: 
+      {{- with .Values.global.imagePullSecrets }}
+      imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       serviceAccountName: {{ include "chart.serviceAccountName" . }}
+      {{- with .Values.cubeApi.podSecurityContext }}
       securityContext:
-        {{- toYaml .Values.podSecurityContext | nindent 8 }}
-      volumes:
-        - name: cubeapi-pv
-          persistentVolumeClaim:
-            claimName: cubeapi-pvc
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       containers:
-        - name: {{ .Chart.Name }}
+        - name: cube-api
           envFrom:
-          - configMapRef:
-              name: {{ .Values.cubeApi.configmap.name }}
+            - configMapRef:
+                name: {{ include "chart.fullname" . }}-{{ .Values.cubeApi.configmap.name }}
+          {{- with .Values.cubeApi.securityContext }}
           securityContext:
-            {{- toYaml .Values.securityContext | nindent 12 }}
-          image: "{{ .Values.cubeApi.image }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          image: {{ .Values.cubeApi.image | quote }}
           imagePullPolicy: {{ .Values.cubeApi.pullPolicy }}
-          volumeMounts:
-            - mountPath: /cube/conf2
-              name: cubeapi-pv
           ports:
             - name: http
               containerPort: {{ .Values.cubeApi.service.port }}
               protocol: TCP
-          #livenessProbe:
-          #  httpGet:
-          #    path: /
-          #    port: http
-          #readinessProbe:
-          #  httpGet:
-          #    path: /
-          #    port: http
+          {{- with .Values.cubeApi.resources }}
           resources:
-            {{- toYaml .Values.resources | nindent 12 }}
-      {{- with .Values.nodeSelector }}
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+      {{- with .Values.cubeApi.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- with .Values.affinity }}
+      {{- with .Values.cubeApi.affinity }}
       affinity:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- with .Values.tolerations }}
+      {{- with .Values.cubeApi.tolerations }}
       tolerations:
         {{- toYaml . | nindent 8 }}
       {{- end }}

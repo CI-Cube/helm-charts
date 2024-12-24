@@ -12,7 +12,7 @@ This Helm chart deploys CICube Enterprise on a Kubernetes cluster.
 
 ### GitHub App Installation
 
-![GitHub App Installation](./app-1.png)
+
 1. Go to your GitHub organization settings
 2. Navigate to "GitHub Apps" section
 3. Click "New GitHub App"
@@ -22,12 +22,13 @@ This Helm chart deploys CICube Enterprise on a Kubernetes cluster.
    - **Webhook URL**: `https://<your-api-domain>/api/github/webhook` // example: https://cicube-api.frontegg.com/api/github/webhook
    - **Expire user authorization tokens**: Uncheck this option
    - **Request user authorization (OAuth) during installation**: Enable this option
-![GitHub App Installation](./app-4.png)
    - **Active**: **Uncheck** this option under Webhook section
+   - 
+![GitHub App Installation](./app-1.png)
 
 ![GitHub App Installation](./app-2.png)
 
-![GitHub App Installation](./app-3.png)
+
 1. Set the following permissions:
    - **Repository Permissions**:
      - Actions: Read
@@ -39,12 +40,14 @@ This Helm chart deploys CICube Enterprise on a Kubernetes cluster.
    - **Account Permissions**:
      - Email addresses: Read
 
-2. After creating the app:
+![GitHub App Installation](./app-3.png)
+
+1. After creating the app:
    - Save the App ID
    - Generate and save a secret key
    - Install the app in your organization
 
-3. Update your CI Cube configuration with:
+2. Update your CI Cube configuration with:
    - App ID
    - Secret key
 
@@ -319,3 +322,4 @@ SSL mode configuration is critical for security:
 - `api.DATABASE_SSL_MODE` must be set to "false"
 - `cubejs.cubeApi.env.var.CUBEJS_DB_SSL` must be set to "false"
 - `cubejs.cubeRefreshWorker.env.var.CUBEJS_DB_SSL` must be set to "false"
+

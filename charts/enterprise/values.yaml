@@ -11,7 +11,7 @@ api:
   
   image:
     repository: ghcr.io/ci-cube/cicube-api/api
-    tag: "sha-a19f4d8"
+    tag: "sha-5fd8823"
     pullPolicy: IfNotPresent
 
   imagePullSecrets:
@@ -115,8 +115,8 @@ api:
   GOOGLE_CLIENT_SECRET: ""
   WEB_URL: "https://app2.cicube.io"
   API_URL: "https://api2.cicube.io"
-  SMTP_USERNAME: "AKIAZQ3DRIZTVK43QQWY"
-  SMTP_PASSWORD: "BJiinRLIp017rLAcyYzL1sAaeZSVuhAmmiJt/Q/i8njD"
+  SMTP_USERNAME: ""
+  SMTP_PASSWORD: ""
   SMTP_HOST: "email-smtp.eu-west-1.amazonaws.com"
   SMTP_PORT: "2465"
   SMTP_FROM: '"CICube Enterprise" <info@cicube.io>'

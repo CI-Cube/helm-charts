@@ -18,8 +18,8 @@ This Helm chart deploys CICube Enterprise on a Kubernetes cluster.
 3. Click "New GitHub App"
 4. Fill in the following details:
    - **App Name**: <Your App Name> // example: frontegg-cicube-enterprise
-   - **Homepage URL**: Your CI Cube Enterprise instance URL // example: https://cicube-app.frontegg.com
-   - **Webhook URL**: `https://<your-api-domain>/api/github/webhook` // example: https://cicube-api.frontegg.com/api/github/webhook
+   - **Homepage URL**: Your CI Cube Enterprise instance URL // example: https://cicube-app.example.com
+   - **Webhook URL**: `https://<your-api-domain>/api/github/webhook` // example: https://cicube-api.example.com/api/github/webhook
    - **Expire user authorization tokens**: Uncheck this option
    - **Request user authorization (OAuth) during installation**: Enable this option
    - **Active**: **Uncheck** this option under Webhook section
@@ -104,7 +104,7 @@ api:
   ingress:
     enabled: true
     hosts:
-      - host: api.example.com  # Your API domain - example: https://cicube-api.frontegg.com
+      - host: api.example.com  # Your API domain - example: https://cicube-api.example.com
         paths:
           - path: /
             pathType: ImplementationSpecific
@@ -114,7 +114,7 @@ api:
           - api.example.com
   env:
     JWT_SECRET: "YOUR_JWT_SECRET"  # Must be same in all JWT references - openssl rand -hex 16
-    API_URL: "https://api.example.com"  # Must match ingress host - example: https://cicube-api.frontegg.com
+    API_URL: "https://api.example.com"  # Must match ingress host - example: https://cicube-api.example.com
     DATABASE_HOST: "ci-cube-postgresql"  # Default PostgreSQL service name
     DATABASE_USER: "postgres"  # Default PostgreSQL username
     DATABASE_PASSWORD: ""  # IMPORTANT: Must match postgresql.auth.password
@@ -135,7 +135,7 @@ cubejs:
     tls:
       - secretName: "cube-tls"
         hosts:
-          - cube.example.com // Your Cube domain - example: https://cicube-cube.frontegg.com
+          - cube.example.com // Your Cube domain - example: https://cicube-cube.example.com
   cubeApi:
     env:
       var:
@@ -177,9 +177,9 @@ app:
         hosts:
           - app.example.com
   env:
-    VITE_API_URL: "https://api.example.com"    # Must match API ingress host - example: https://cicube-api.frontegg.com
-    VITE_WEB_URL: "https://app.example.com"    # Must match App ingress host - example: https://cicube-app.frontegg.com
-    VITE_CUBE_API_URL: "https://cube.example.com"  # Must match Cube ingress host - example: https://cicube-cube.frontegg.com
+    VITE_API_URL: "https://api.example.com"    # Must match API ingress host - example: https://cicube-api.example.com
+    VITE_WEB_URL: "https://app.example.com"    # Must match App ingress host - example: https://cicube-app.example.com
+    VITE_CUBE_API_URL: "https://cube.example.com"  # Must match Cube ingress host - example: https://cicube-cube.example.com
 ```
 
 4. Install the Helm chart:

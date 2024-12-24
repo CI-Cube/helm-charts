@@ -37,7 +37,7 @@ spec:
       volumes:
         - name: cubestore-pv
           persistentVolumeClaim:
-            claimName: {{ include "chart.fullname" . }}-cubestore-pvc
+            claimName: {{ .Release.Name }}-{{ .Chart.Name }}-cubestore-pvc
       containers:
         - name: cubestore-worker
           envFrom:

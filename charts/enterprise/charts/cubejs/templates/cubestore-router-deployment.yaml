@@ -1,24 +1,27 @@
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: cubestore-router
+  name: {{ include "chart.fullname" . }}-cubestore-router
   labels:
     {{- include "chart.labels" . | nindent 4 }}
+    app.kubernetes.io/component: cubestore-router
 {{- if .Values.annotations }}
   annotations: {{ toYaml .Values.annotations | nindent 4 }}
 {{- end }}
 spec:
-  serviceName: cubestore-router
+  serviceName: {{ include "chart.fullname" . }}-cubestore-router
   {{- if not .Values.autoscaling.enabled }}
   replicas: {{ .Values.cubestoreRouter.replicas }}
   {{- end }}
   selector:
     matchLabels:
-      cubejsApp: cubestoreRouter
+      {{- include "chart.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: cubestore-router
   template:
     metadata:
       labels:
-        cubejsApp: cubestoreRouter
+        {{- include "chart.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: cubestore-router
     spec:
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
@@ -30,17 +33,17 @@ spec:
       volumes:
         - name: cubestore-pv
           persistentVolumeClaim:
-            claimName: cubestore-pvc  
+            claimName: {{ .Release.Name }}-{{ .Chart.Name }}-cubestore-pvc
       containers:
         - name: {{ .Chart.Name }}
           env:
           - name: CUBESTORE_WORKERS
             value: {{ $count := .Values.cubestoreWorker.replicas | int }}{{- $networkAppPort  := .Values.cubestoreWorker.service.port -}}
-            {{- range until $count }}cubestore-worker-{{  .  }}.cubestore-worker:{{ $networkAppPort }},
+            {{- range until $count }}{{ $.Release.Name }}-{{ $.Chart.Name }}-cubestore-worker-{{  .  }}.{{ $.Release.Name }}-{{ $.Chart.Name }}-cubestore-worker:{{ $networkAppPort }},
             {{- end }}
           envFrom:
           - configMapRef: 
-              name: {{ .Values.cubestoreRouter.configmap.name }}
+              name: {{ include "chart.fullname" . }}-{{ .Values.cubestoreRouter.configmap.name }}
           command: ["/bin/sh","-c"]
           args: ["unset CUBESTORE_WORKER_PORT; ./cubestored"]
           volumeMounts:

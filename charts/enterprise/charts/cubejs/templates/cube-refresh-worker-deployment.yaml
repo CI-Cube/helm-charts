@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: cube-refresh-worker
+  name: {{ include "chart.fullname" . }}-cube-refresh-worker
   labels:
     {{- include "chart.labels" . | nindent 4 }}
 {{- if .Values.annotations }}
@@ -13,7 +13,9 @@ spec:
   {{- end }}
   selector:
     matchLabels:
-      cubejsApp: cubeRefreshWorker
+      app.kubernetes.io/name: {{ include "chart.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+      app.kubernetes.io/component: cube-refresh-worker
   template:
     metadata:
       {{- with .Values.podAnnotations }}
@@ -21,7 +23,9 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       labels:
-        cubejsApp: cubeRefreshWorker
+        app.kubernetes.io/name: {{ include "chart.name" . }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+        app.kubernetes.io/component: cube-refresh-worker
     spec:
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
@@ -31,33 +35,25 @@ spec:
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
       volumes:
-        - name: cubeapi-pv
+        - name: cubestore-pv
           persistentVolumeClaim:
-            claimName: cubeapi-pvc
+            claimName: {{ .Release.Name }}-{{ .Chart.Name }}-cubestore-pvc
       containers:
         - name: {{ .Chart.Name }}
           envFrom:
-          - configMapRef: 
-              name: {{ .Values.cubeRefreshWorker.configmap.name }}
+            - configMapRef:
+                name: {{ include "chart.fullname" . }}-{{ .Values.cubeRefreshWorker.configmap.name }}
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
-          image: "{{ .Values.cubeRefreshWorker.image }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          image: "{{ .Values.cubeRefreshWorker.image }}:{{ .Values.cubeRefreshWorker.tag }}"
           imagePullPolicy: {{ .Values.cubeRefreshWorker.pullPolicy }}
           volumeMounts:
             - mountPath: /cube/conf2
-              name: cubeapi-pv
+              name: cubestore-pv
           ports:
             - name: http
               containerPort: {{ .Values.cubeRefreshWorker.service.port }}
               protocol: TCP
-          #livenessProbe:
-          #  httpGet:
-          #    path: /
-          #    port: http
-          #readinessProbe:
-          #  httpGet:
-          #    path: /
-          #    port: http
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
       {{- with .Values.nodeSelector }}

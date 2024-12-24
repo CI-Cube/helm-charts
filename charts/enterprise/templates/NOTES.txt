@@ -24,13 +24,9 @@ CubeJS is available at:
 {{- if .Values.postgresql.enabled }}
 PostgreSQL is installed as part of this release.
 Database Host: {{ .Release.Name }}-postgresql
-{{- else }}
-Using external PostgreSQL database at: {{ .Values.global.database.host }}
 {{- end }}
 
-{{- if .Values.redis.enabled }}
-Redis is installed as part of this release.
-Redis Host: {{ .Release.Name }}-redis-master
-{{- else }}
-Using external Redis at: {{ .Values.global.redis.host }}
+{{- if .Values.api.redis.enabled }}
+Redis is installed as part of the API release.
+Redis Host: {{ .Release.Name }}-api-redis-master
 {{- end }} 

@@ -1,15 +1,17 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: cube-refresh-worker
+  name: {{ include "chart.fullname" . }}-cube-refresh-worker
   labels:
     {{- include "chart.labels" . | nindent 4 }}
 spec:
-  type: {{ .Values.cubeRefreshWorker.service.type }}
+  type: ClusterIP
   ports:
-    - port: {{ .Values.cubeRefreshWorker.service.service_port }}
+    - port: {{ .Values.cubeRefreshWorker.service.port }}
       targetPort: {{ .Values.cubeRefreshWorker.service.port }}
       protocol: TCP
       name: http
   selector:
-    cubejsApp: cubeRefreshWorker
+    app.kubernetes.io/name: {{ include "chart.name" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/component: cube-refresh-worker

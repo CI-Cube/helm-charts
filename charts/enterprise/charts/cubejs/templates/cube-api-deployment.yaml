@@ -46,7 +46,7 @@ spec:
           securityContext:
             {{- toYaml . | nindent 12 }}
           {{- end }}
-          image: {{ .Values.cubeApi.image | quote }}
+          image: "{{ .Values.cubeApi.image }}:{{ .Values.cubeApi.tag }}"
           imagePullPolicy: {{ .Values.cubeApi.pullPolicy }}
           ports:
             - name: http

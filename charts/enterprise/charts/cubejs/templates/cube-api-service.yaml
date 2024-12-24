@@ -1,15 +1,17 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: cube-api
+  name: {{ include "chart.fullname" . }}-cube-api
   labels:
     {{- include "chart.labels" . | nindent 4 }}
 spec:
-  type: {{ .Values.cubeApi.service.type }}
+  type: ClusterIP
   ports:
-    - port: {{ .Values.cubeApi.service.service_port }}
+    - port: {{ .Values.cubeApi.service.port }}
       targetPort: {{ .Values.cubeApi.service.port }}
       protocol: TCP
       name: http
   selector:
-    cubejsApp: cubeApi
+    app.kubernetes.io/name: {{ include "chart.name" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/component: cube-api

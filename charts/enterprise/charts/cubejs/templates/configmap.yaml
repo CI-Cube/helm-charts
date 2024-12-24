@@ -1,0 +1,43 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "chart.fullname" . }}-{{ .Values.cubeApi.configmap.name }}
+  labels:
+    {{- include "chart.labels" . | nindent 4 }}
+data:
+  {{- range $key, $value := .Values.cubeApi.env.var }}
+  {{ $key }}: {{ $value | quote }}
+  {{- end }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "chart.fullname" . }}-{{ .Values.cubeRefreshWorker.configmap.name }}
+  labels:
+    {{- include "chart.labels" . | nindent 4 }}
+data:
+  {{- range $key, $value := .Values.cubeRefreshWorker.env.var }}
+  {{ $key }}: {{ $value | quote }}
+  {{- end }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "chart.fullname" . }}-{{ .Values.cubestoreRouter.configmap.name }}
+  labels:
+    {{- include "chart.labels" . | nindent 4 }}
+data:
+  {{- range $key, $value := .Values.cubestoreRouter.env.var }}
+  {{ $key }}: {{ $value | quote }}
+  {{- end }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "chart.fullname" . }}-{{ .Values.cubestoreWorker.configmap.name }}
+  labels:
+    {{- include "chart.labels" . | nindent 4 }}
+data:
+  {{- range $key, $value := .Values.cubestoreWorker.env.var }}
+  {{ $key }}: {{ $value | quote }}
+  {{- end }} 

@@ -109,6 +109,21 @@ spec:
                 secretKeyRef:
                   key: SMTP_PASSWORD
                   name: {{ .Release.Name }}-auth
+            - name: SMTP_HOST
+              valueFrom:
+                secretKeyRef:
+                  key: SMTP_HOST
+                  name: {{ .Release.Name }}-auth
+            - name: SMTP_PORT
+              valueFrom:
+                secretKeyRef:
+                  key: SMTP_PORT
+                  name: {{ .Release.Name }}-auth
+            - name: SMTP_FROM
+              valueFrom:
+                secretKeyRef:
+                  key: SMTP_FROM
+                  name: {{ .Release.Name }}-auth
             - name: CUBE_API_URL
               valueFrom:
                 secretKeyRef:

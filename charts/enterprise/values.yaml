@@ -291,8 +291,8 @@ app:
     VITE_GITHUB_CLIENT_ID: "Iv23li2VKaE3F51hKfyB"
     VITE_GITHUB_APP_NAME: "cicube-2-enterprise-test-app"
     VITE_CUBE_API_URL: "https://cube2.cicube.io"
-    VITE_GA_MEASUREMENT_ID: "G-22"
-    VITE_GOOGLE_CLIENT_ID: "871054934353-olb8mhq067aals50l0d1ouam4ben096r.apps.googleusercontent.com"
+    VITE_GA_MEASUREMENT_ID: ""
+    VITE_GOOGLE_CLIENT_ID: ""
 
   autoscaling:
     enabled: false

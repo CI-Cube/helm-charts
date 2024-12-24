@@ -70,7 +70,14 @@ Note: Make sure your CI Cube instance is accessible from GitHub's IP addresses t
 
 ## Installation Steps
 
-1. First, create a registry secret to pull images:
+1. Add the required Helm repositories:
+```bash
+helm repo add cicube https://ci-cube.github.io/helm-charts
+helm repo add bitnami https://charts.bitnami.com/bitnami
+helm repo update
+```
+
+2. First, create a registry secret to pull images:
 ```bash
 kubectl create secret docker-registry registry-secret \
   --docker-server=ghcr.io \
@@ -79,7 +86,7 @@ kubectl create secret docker-registry registry-secret \
   --docker-email=YOUR_EMAIL
 ```
 
-2. Create a `values.yaml` file to override default values. Here's a template:
+3. Create a `values.yaml` file to override default values. Here's a template:
 ```yaml
 global:
   imagePullSecrets:
@@ -175,9 +182,9 @@ app:
     VITE_CUBE_API_URL: "https://cube.example.com"  # Must match Cube ingress host - example: https://cicube-cube.frontegg.com
 ```
 
-3. Install the Helm chart:
+4. Install the Helm chart:
 ```bash
-helm install ci-cube . -f values.yaml -n your-namespace
+helm install ci-cube cicube/halley-enterprise -f values.yaml -n your-namespace
 ```
 
 ## Important Configuration Notes

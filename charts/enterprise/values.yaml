@@ -72,9 +72,7 @@ api:
 
   nodeSelector: {}
 
-  selectorLabels: 
-    admission.datadoghq.com/enabled: 'true'
-    admission.datadoghq.com/config.mode: 'socket'
+  selectorLabels: {}
 
   tolerations: []
 
@@ -91,7 +89,7 @@ api:
       enabled: false
     master:
       persistence:
-        enabled: false
+        enabled: true
       service:
         ports:
           redis: 6379
@@ -262,7 +260,7 @@ postgresql:
     postgresPassword: "postgres123"  # postgres admin şifresi
   primary:
     persistence:
-      enabled: false
+      enabled: true
       size: 10Gi
 
 # App configuration
@@ -272,7 +270,7 @@ app:
   
   image:
     repository: ghcr.io/ci-cube/cicube-app/app
-    tag: "sha-cd103de"
+    tag: "sha-48197e2"
     pullPolicy: IfNotPresent
 
   imagePullSecrets:

@@ -12,6 +12,7 @@ This Helm chart deploys CICube Enterprise on a Kubernetes cluster.
 
 ### GitHub App Installation
 
+![GitHub App Installation](./app-1.png)
 1. Go to your GitHub organization settings
 2. Navigate to "GitHub Apps" section
 3. Click "New GitHub App"
@@ -19,23 +20,31 @@ This Helm chart deploys CICube Enterprise on a Kubernetes cluster.
    - **App Name**: <Your App Name> // example: frontegg-cicube-enterprise
    - **Homepage URL**: Your CI Cube Enterprise instance URL // example: https://cicube-app.frontegg.com
    - **Webhook URL**: `https://<your-api-domain>/api/github/webhook` // example: https://cicube-api.frontegg.com/api/github/webhook
+   - **Expire user authorization tokens**: Uncheck this option
+   - **Request user authorization (OAuth) during installation**: Enable this option
+![GitHub App Installation](./app-4.png)
+   - **Active**: **Uncheck** this option under Webhook section
 
-5. Set the following permissions:
+![GitHub App Installation](./app-2.png)
+
+![GitHub App Installation](./app-3.png)
+1. Set the following permissions:
    - **Repository Permissions**:
      - Actions: Read
      - Metadata: Read
      - Webhooks: Read & Write
    - **Organization Permissions**:
      - Members: Read
-     - Email addresses: Read
      - Plan: Read
+   - **Account Permissions**:
+     - Email addresses: Read
 
-6. After creating the app:
+2. After creating the app:
    - Save the App ID
    - Generate and save a secret key
    - Install the app in your organization
 
-7. Update your CI Cube configuration with:
+3. Update your CI Cube configuration with:
    - App ID
    - Secret key
 

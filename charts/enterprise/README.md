@@ -23,7 +23,7 @@ This Helm chart deploys CICube Enterprise on a Kubernetes cluster.
    - **Expire user authorization tokens**: Uncheck this option
    - **Request user authorization (OAuth) during installation**: Enable this option
    - **Active**: **Uncheck** this option under Webhook section
-   - 
+
 ![GitHub App Installation](./app-1.png)
 
 ![GitHub App Installation](./app-2.png)
@@ -87,6 +87,7 @@ kubectl create secret docker-registry registry-secret \
 ```
 
 3. Create a `values.yaml` file to override default values. Here's a template:
+
 ```yaml
 global:
   imagePullSecrets:
@@ -182,7 +183,7 @@ app:
     VITE_CUBE_API_URL: "https://cube.example.com"  # Must match Cube ingress host - example: https://cicube-cube.example.com
 ```
 
-4. Install the Helm chart:
+1. Install the Helm chart:
 ```bash
 helm install ci-cube cicube/halley-enterprise -f values.yaml -n your-namespace
 ```

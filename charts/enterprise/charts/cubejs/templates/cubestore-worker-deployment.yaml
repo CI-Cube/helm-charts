@@ -1,0 +1,75 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "chart.fullname" . }}-cubestore-worker
+  labels:
+    app.kubernetes.io/name: {{ include "chart.name" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/component: cubestore-worker
+    {{- if .Chart.AppVersion }}
+    app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
+    {{- end }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+  {{- with .Values.cubestoreWorker.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  serviceName: {{ include "chart.fullname" . }}-cubestore-worker
+  replicas: {{ .Values.cubestoreWorker.replicas | default 2 }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "chart.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+      app.kubernetes.io/component: cubestore-worker
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ include "chart.name" . }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+        app.kubernetes.io/component: cubestore-worker
+    spec:
+      serviceAccountName: {{ include "chart.serviceAccountName" . }}
+      {{- with .Values.cubestoreWorker.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      volumes:
+        - name: cubestore-pv
+          persistentVolumeClaim:
+            claimName: {{ .Release.Name }}-{{ .Chart.Name }}-cubestore-pvc
+      containers:
+        - name: cubestore-worker
+          envFrom:
+            - configMapRef:
+                name: {{ include "chart.fullname" . }}-{{ .Values.cubestoreWorker.configmap.name }}
+          command: ["./cubestored"]
+          volumeMounts:
+            - mountPath: /cube/data
+              name: cubestore-pv
+          {{- with .Values.cubestoreWorker.securityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          image: {{ .Values.cubestoreWorker.image | quote }}
+          imagePullPolicy: {{ .Values.cubestoreWorker.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.cubestoreWorker.service.port }}
+              protocol: TCP
+          {{- with .Values.cubestoreWorker.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+      {{- with .Values.cubestoreWorker.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.cubestoreWorker.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.cubestoreWorker.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

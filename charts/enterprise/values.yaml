@@ -1,0 +1,329 @@
+# Global configurations
+global:
+  # Image pull secrets for all deployments
+  imagePullSecrets:
+    - name: registry-secret
+
+# Component enablement
+api:
+  enabled: true
+  replicaCount: 1
+  
+  image:
+    repository: ghcr.io/ci-cube/cicube-api/api
+    tag: "sha-a19f4d8"
+    pullPolicy: IfNotPresent
+
+  imagePullSecrets:
+    - name: registry-secret
+
+  nameOverride: ""
+  fullnameOverride: ""
+
+  serviceAccount:
+    create: true
+    annotations: {}
+    name: ""
+
+  podAnnotations: {}
+
+  podSecurityContext: {}
+    # fsGroup: 2000
+
+  securityContext: {}
+    # capabilities:
+    #   drop:
+    #   - ALL
+    # readOnlyRootFilesystem: true
+    # runAsNonRoot: true
+    # runAsUser: 1000
+
+  service:
+    type: ClusterIP
+    port: 80
+
+  ingress:
+    enabled: true
+    annotations:
+      cert-manager.io/issuer: "letsencrypt-prod"
+    hosts:
+      - host: api2.cicube.io
+        paths:
+          - path: /
+            pathType: ImplementationSpecific
+    tls:
+      - secretName: "api-tls"
+        hosts:
+          - api2.cicube.io
+
+  resources: {}
+    # limits:
+    #   cpu: 100m
+    #   memory: 128Mi
+    # requests:
+    #   cpu: 100m
+    #   memory: 128Mi
+
+  autoscaling:
+    enabled: false
+    minReplicas: 1
+    maxReplicas: 100
+    targetCPUUtilizationPercentage: 80
+
+  nodeSelector: {}
+
+  selectorLabels: 
+    admission.datadoghq.com/enabled: 'true'
+    admission.datadoghq.com/config.mode: 'socket'
+
+  tolerations: []
+
+  affinity: {}
+  
+  # Redis configurations for Bitnami Redis chart
+  redis:
+    enabled: true
+    global:
+      redis:
+        password: null
+    architecture: standalone
+    auth:
+      enabled: false
+    master:
+      persistence:
+        enabled: false
+      service:
+        ports:
+          redis: 6379
+    replica:
+      replicaCount: 0
+      persistence:
+        enabled: false
+
+  # API Secret Values
+  DATABASE_HOST: "ci-cube-postgresql"
+  DATABASE_USER: "postgres"
+  DATABASE_PASSWORD: "postgres123"
+  DATABASE_NAME: "halley"
+  DATABASE_SSL_MODE: "false"
+  REDIS_HOST: "ci-cube-redis-master"
+  REDIS_PORT: "6379"
+  JWT_SECRET: "secret123456789"
+  GITHUB_CLIENT_ID: "Iv23li2VKaE3F51hKfyB"
+  GITHUB_CLIENT_SECRET: "499b9fe2e3c4b033a24d96791cfed0c2efdd69e2"
+  GOOGLE_CLIENT_ID: ""
+  GOOGLE_CLIENT_SECRET: ""
+  WEB_URL: "https://app2.cicube.io"
+  API_URL: "https://api2.cicube.io"
+  SMTP_USERNAME: "AKIAZQ3DRIZTVK43QQWY"
+  SMTP_PASSWORD: "BJiinRLIp017rLAcyYzL1sAaeZSVuhAmmiJt/Q/i8njD"
+  SMTP_HOST: "email-smtp.eu-west-1.amazonaws.com"
+  SMTP_PORT: "2465"
+  SMTP_FROM: '"CICube Enterprise" <info@cicube.io>'
+  CUBE_API_URL: "http://cube-api.default.svc.cluster.local:4000/cubejs-api/v1"
+  LOOPS_API_KEY: ""
+
+cubejs:
+  enabled: true
+  annotations: 
+    reloader.stakater.com/auto: "true"
+  
+  imagePullSecrets:
+    - name: registry-secret
+
+  nameOverride: ""
+  fullnameOverride: ""
+
+  serviceAccount:
+    create: true
+    annotations: {}
+    name: ""
+
+  podAnnotations: {}
+  podSecurityContext: {}
+  securityContext: {}
+
+  resources: {}
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+
+  autoscaling:
+    enabled: false
+    minReplicas: 1
+    maxReplicas: 100
+    targetCPUUtilizationPercentage: 80
+
+  ingress:
+    enabled: true
+    annotations:
+      cert-manager.io/issuer: "letsencrypt-prod"
+    hosts:
+      - host: cube2.cicube.io
+        paths:
+          - path: /
+            pathType: ImplementationSpecific
+    tls:
+      - secretName: "cube-tls"
+        hosts:
+          - cube2.cicube.io
+
+  cubeApi:
+    image: ghcr.io/ci-cube/cicube-api/cube
+    tag: "sha-13fd9ca"
+    pullPolicy: IfNotPresent
+    service:
+      type: ClusterIP
+      port: 4000
+      service_port: 4000
+    replicas: 1
+    configmap:
+      name: cube-api-config
+    env:
+      var:
+        CUBEJS_DB_TYPE: "postgres"
+        CUBEJS_DB_HOST: "ci-cube-postgresql"
+        CUBEJS_DB_NAME: "halley"
+        CUBEJS_DB_USER: "postgres"
+        CUBEJS_DB_PASS: "postgres123"
+        CUBEJS_DB_SSL: "false"
+        CUBEJS_DEV_MODE: "false"
+        CUBEJS_DEFAULT_API_SCOPES: "graphql,meta,data,jobs"
+        CUBEJS_CUBESTORE_HOST: "ci-cube-cubejs-cubestore-router"
+        CUBEJS_LOG_LEVEL: "trace"
+        CUBEJS_API_SECRET: "secret123456789"
+
+  cubeRefreshWorker:
+    image: ghcr.io/ci-cube/cicube-api/cube
+    tag: "sha-13fd9ca"
+    pullPolicy: IfNotPresent
+    service:
+      type: ClusterIP
+      port: 80
+      service_port: 80
+    replicas: 1
+    configmap:
+      name: cube-refresh-worker-config
+    env:
+      var:
+        CUBEJS_DB_TYPE: "postgres"
+        CUBEJS_DB_HOST: "ci-cube-postgresql"
+        CUBEJS_DB_NAME: "halley"
+        CUBEJS_DB_USER: "postgres"
+        CUBEJS_DB_PASS: "postgres123"
+        CUBEJS_DB_SSL: "false"
+        CUBEJS_DEV_MODE: "false"
+        CUBEJS_REFRESH_WORKER: "true"
+        CUBEJS_LOG_LEVEL: "trace"
+        CUBEJS_API_SECRET: "secret123456789"
+
+  cubestoreRouter:
+    image: "cubejs/cubestore"
+    pullPolicy: IfNotPresent
+    service:
+      type: ClusterIP
+      port: 9999
+      service_port: 9999
+    replicas: 1
+    configmap:
+      name: cubestore-router-config
+    env:
+      var:
+        CUBESTORE_REMOTE_DIR: "/cube/data"
+        CUBESTORE_META_PORT: "9999"
+        CUBESTORE_SERVER_NAME: "ci-cube-cubejs-cubestore-router:9999"
+        CUBEJS_LOG_LEVEL: "trace"
+
+  cubestoreWorker:
+    image: "cubejs/cubestore"
+    pullPolicy: IfNotPresent
+    service:
+      type: ClusterIP
+      port: 9001
+      service_port: 9001
+    replicas: 1
+    configmap:
+      name: ci-cube-cubejs-cubestore-worker-config
+    env:
+      var:
+        CUBESTORE_SERVER_NAME: "ci-cube-cubejs-cubestore-worker-0.ci-cube-cubejs-cubestore-worker:9001"
+        CUBESTORE_WORKER_PORT: "9001"
+        CUBESTORE_REMOTE_DIR: "/cube/data"
+        CUBESTORE_META_ADDR: "ci-cube-cubejs-cubestore-router:9999"
+        CUBEJS_LOG_LEVEL: "trace"
+
+# PostgreSQL configuration
+postgresql:
+  enabled: true
+  auth:
+    username: "postgres"
+    password: "postgres123"
+    database: "halley"
+    postgresPassword: "postgres123"  # postgres admin şifresi
+  primary:
+    persistence:
+      enabled: false
+      size: 10Gi
+
+# App configuration
+app:
+  enabled: true
+  replicaCount: 1
+  
+  image:
+    repository: ghcr.io/ci-cube/cicube-app/app
+    tag: "sha-cd103de"
+    pullPolicy: IfNotPresent
+
+  imagePullSecrets:
+    - name: registry-secret
+
+  nameOverride: ""
+  fullnameOverride: ""
+
+  service:
+    type: ClusterIP
+    port: 3000
+
+  env:
+    VITE_API_URL: "https://api2.cicube.io"
+    VITE_WEB_URL: "https://app2.cicube.io"
+    VITE_GITHUB_CLIENT_ID: "Iv23li2VKaE3F51hKfyB"
+    VITE_GITHUB_APP_NAME: "cicube-2-enterprise-test-app"
+    VITE_CUBE_API_URL: "https://cube2.cicube.io"
+    VITE_GA_MEASUREMENT_ID: "G-22"
+    VITE_GOOGLE_CLIENT_ID: "871054934353-olb8mhq067aals50l0d1ouam4ben096r.apps.googleusercontent.com"
+
+  autoscaling:
+    enabled: false
+    minReplicas: 1
+    maxReplicas: 100
+    targetCPUUtilizationPercentage: 80
+
+  serviceAccount:
+    create: true
+    annotations: {}
+    name: ""
+
+  podAnnotations: {}
+  podSecurityContext: {}
+  securityContext: {}
+
+  ingress:
+    enabled: true
+    annotations:
+      cert-manager.io/issuer: "letsencrypt-prod"
+    hosts:
+      - host: app2.cicube.io
+        paths:
+          - path: /
+            pathType: ImplementationSpecific
+    tls:
+      - secretName: "app-tls"
+        hosts:
+          - app2.cicube.io
+
+  resources: {}
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}      

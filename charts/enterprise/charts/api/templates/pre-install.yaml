@@ -1,0 +1,60 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "api.fullname" . }}
+  labels:
+    {{- include "api.labels" . | nindent 4 }}
+  annotations:
+    # This is what defines this resource as a hook. Without this line, the
+    # job is considered part of the release.
+    "helm.sh/hook": post-install, post-upgrade	
+    "helm.sh/hook-weight": "-5"
+spec:
+  template:
+    metadata:
+      name: {{ include "api.fullname" . }}
+      labels:
+        app.kubernetes.io/managed-by: {{ .Release.Service | quote }}
+        app.kubernetes.io/instance: {{ .Release.Name | quote }}
+        helm.sh/chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      restartPolicy: Never
+      containers:
+        - name: pre-install-job
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          command: ["/bin/sh"]
+          args:
+            - -c
+            - >-
+                npm run db:migrate &&
+                npm run db:seed
+          env:
+            - name: DATABASE_HOST
+              valueFrom:
+                secretKeyRef:
+                  key: DATABASE_HOST
+                  name: {{ .Release.Name }}-auth
+            - name: DATABASE_USER
+              valueFrom:
+                secretKeyRef:
+                  key: DATABASE_USER
+                  name: {{ .Release.Name }}-auth
+            - name: DATABASE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: postgresql-password
+                  name: {{ .Release.Name }}-app-secrets
+            - name: DATABASE_NAME
+              valueFrom:
+                secretKeyRef:
+                  key: DATABASE_NAME
+                  name: {{ .Release.Name }}-auth
+            
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

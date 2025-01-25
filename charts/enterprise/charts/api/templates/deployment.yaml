@@ -1,0 +1,168 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "api.fullname" . }}
+  labels:
+    {{- include "api.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "api.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "api.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "api.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+            - name: DATABASE_HOST
+              valueFrom:
+                secretKeyRef:
+                  key: DATABASE_HOST
+                  name: {{ .Release.Name }}-auth
+            - name: DATABASE_USER
+              valueFrom:
+                secretKeyRef:
+                  key: DATABASE_USER
+                  name: {{ .Release.Name }}-auth
+            - name: DATABASE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: postgresql-password
+                  name: {{ .Release.Name }}-app-secrets
+            - name: DATABASE_NAME
+              valueFrom:
+                secretKeyRef:
+                  key: DATABASE_NAME
+                  name: {{ .Release.Name }}-auth
+            - name: DATABASE_SSL_MODE
+              valueFrom:
+                secretKeyRef:
+                  key: DATABASE_SSL_MODE
+                  name: {{ .Release.Name }}-auth
+            - name: REDIS_HOST
+              valueFrom:
+                secretKeyRef:
+                  key: REDIS_HOST
+                  name: {{ .Release.Name }}-auth
+            - name: REDIS_PORT
+              valueFrom:
+                secretKeyRef:
+                  key: REDIS_PORT
+                  name: {{ .Release.Name }}-auth
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  key: jwt-secret
+                  name: {{ .Release.Name }}-app-secrets
+            - name: GITHUB_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  key: github-client-id
+                  name: {{ .Release.Name }}-app-secrets
+            - name: GITHUB_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  key: github-client-secret
+                  name: {{ .Release.Name }}-app-secrets
+            - name: GOOGLE_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  key: GOOGLE_CLIENT_ID
+                  name: {{ .Release.Name }}-auth
+            - name: GOOGLE_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  key: google-client-secret
+                  name: {{ .Release.Name }}-app-secrets
+            - name: WEB_URL
+              valueFrom:
+                secretKeyRef:
+                  key: WEB_URL
+                  name: {{ .Release.Name }}-auth
+            - name: API_URL
+              valueFrom:
+                secretKeyRef:
+                  key: API_URL
+                  name: {{ .Release.Name }}-auth
+            - name: SMTP_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  key: smtp-username
+                  name: {{ .Release.Name }}-app-secrets
+            - name: SMTP_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: smtp-password
+                  name: {{ .Release.Name }}-app-secrets
+            - name: SMTP_HOST
+              valueFrom:
+                secretKeyRef:
+                  key: SMTP_HOST
+                  name: {{ .Release.Name }}-auth
+            - name: SMTP_PORT
+              valueFrom:
+                secretKeyRef:
+                  key: SMTP_PORT
+                  name: {{ .Release.Name }}-auth
+            - name: SMTP_FROM
+              valueFrom:
+                secretKeyRef:
+                  key: SMTP_FROM
+                  name: {{ .Release.Name }}-auth
+            - name: CUBE_API_URL
+              value: "http://{{ .Release.Name }}-cubejs-cube-api.{{ .Release.Namespace }}.svc.cluster.local:4000/cubejs-api/v1"
+            - name: LOOPS_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  key: loops-api-key
+                  name: {{ .Release.Name }}-app-secrets
+          ports:
+            - name: http
+              containerPort: 3001
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /test/test
+              port: http
+            periodSeconds: 60
+            timeoutSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /test/test
+              port: http
+            periodSeconds: 60
+            timeoutSeconds: 10
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

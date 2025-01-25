@@ -102,7 +102,7 @@ api:
   
   image:
     repository: ghcr.io/ci-cube/cicube-api/api
-    tag: "sha-5fd8823"
+    tag: "sha-f72fb74"
     pullPolicy: IfNotPresent
 
   ingress:
@@ -136,7 +136,7 @@ app:
   
   image:
     repository: ghcr.io/ci-cube/cicube-app/app
-    tag: "sha-48197e2"  # Replace with specific version
+    tag: "sha-6b59111"  # Replace with specific version
     pullPolicy: IfNotPresent
 
   ingress:
@@ -181,7 +181,7 @@ cubejs:
 
   cubeApi:
     image: ghcr.io/ci-cube/cicube-api/cube
-    tag: "sha-13fd9ca"  # Replace with specific version
+    tag: "sha-8695f0c"  # Replace with specific version
     pullPolicy: IfNotPresent
     service:
       type: ClusterIP
@@ -190,7 +190,7 @@ cubejs:
 
   cubeRefreshWorker:
     image: ghcr.io/ci-cube/cicube-api/cube
-    tag: "sha-13fd9ca"  # Replace with specific version
+    tag: "sha-8695f0c"  # Replace with specific version
     pullPolicy: IfNotPresent
     replicas: 1
 

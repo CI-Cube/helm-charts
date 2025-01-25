@@ -102,7 +102,7 @@ api:
   
   image:
     repository: ghcr.io/ci-cube/cicube-api/api
-    tag: "latest"  # Replace with specific version
+    tag: "sha-5fd8823"
     pullPolicy: IfNotPresent
 
   ingress:
@@ -136,7 +136,7 @@ app:
   
   image:
     repository: ghcr.io/ci-cube/cicube-app/app
-    tag: "latest"  # Replace with specific version
+    tag: "sha-48197e2"  # Replace with specific version
     pullPolicy: IfNotPresent
 
   ingress:
@@ -181,7 +181,7 @@ cubejs:
 
   cubeApi:
     image: ghcr.io/ci-cube/cicube-api/cube
-    tag: "latest"  # Replace with specific version
+    tag: "sha-13fd9ca"  # Replace with specific version
     pullPolicy: IfNotPresent
     service:
       type: ClusterIP
@@ -190,19 +190,19 @@ cubejs:
 
   cubeRefreshWorker:
     image: ghcr.io/ci-cube/cicube-api/cube
-    tag: "latest"  # Replace with specific version
+    tag: "sha-13fd9ca"  # Replace with specific version
     pullPolicy: IfNotPresent
     replicas: 1
 
 postgresql:
   enabled: true
   auth:
-    username: "postgres"
-    database: "halley"
-    existingSecret: "cicube-app-secrets"
+    existingSecret: "{{ .Release.Name }}-app-secrets"
     secretKeys:
       adminPasswordKey: postgresql-password
       userPasswordKey: postgresql-password
+    username: "postgres"
+    database: "halley"
   primary:
     persistence:
       enabled: true
@@ -223,19 +223,7 @@ Important notes about values.yaml:
    - `global.secrets.github.clientSecret`: GitHub Client Secret
    - `global.secrets.github.appName`: GitHub App name
 
-3. **Image Tags**: Replace `latest` with specific versions
-   - `api.image.tag`
-   - `app.image.tag`
-   - `cubejs.cubeApi.tag`
-   - `cubejs.cubeRefreshWorker.tag`
-
-4. **Optional Features**: These can be left empty if not needed
-   - Google OAuth configuration
-   - SMTP settings for email notifications
-   - Google Analytics measurement ID
-   - Loops integration
-
-5. **Storage**: Adjust PostgreSQL storage size based on your needs
+3. **Storage**: Adjust PostgreSQL storage size based on your needs
    - `postgresql.primary.persistence.size`: Default is 10Gi
 
 ## 6. Install

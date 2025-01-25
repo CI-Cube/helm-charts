@@ -60,3 +60,25 @@ Create the name of the service account to use
 {{- default "default" .Values.serviceAccount.name }}
 {{- end }}
 {{- end }}
+
+{{/*
+Create database host name.
+*/}}
+{{- define "api.databaseHost" -}}
+{{- if .Values.global.secrets.postgresql.host }}
+{{- .Values.global.secrets.postgresql.host }}
+{{- else }}
+{{- printf "%s-postgresql" .Release.Name }}
+{{- end }}
+{{- end }}
+
+{{/*
+Create redis host name.
+*/}}
+{{- define "api.redisHost" -}}
+{{- if .Values.global.secrets.redis.host }}
+{{- .Values.global.secrets.redis.host }}
+{{- else }}
+{{- printf "%s-redis-master" .Release.Name }}
+{{- end }}
+{{- end }}

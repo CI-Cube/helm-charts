@@ -1,83 +1,54 @@
-# CICube Enterprise Helm Chart
+# CICube Enterprise Installation Guide
 
-This Helm chart deploys CICube Enterprise on a Kubernetes cluster.
+This guide contains the steps needed to install CICube Enterprise on your Kubernetes cluster.
 
 ## Prerequisites
 
 - Kubernetes 1.19+
 - Helm 3.0+
-- A Kubernetes cluster with access to container registry
-- Container registry credentials
-- Domain names configured for ingress (api.example.com, cube.example.com, app.example.com)
+- GitHub account and organization
+- 3 domains (for API, Web UI, and Cube)
 
-### GitHub App Installation
-
+## 1. Create GitHub App
 
 1. Go to your GitHub organization settings
-2. Navigate to "GitHub Apps" section
-3. Click "New GitHub App"
+2. Select "GitHub Apps" from the left menu
+3. Click "New GitHub App" button
 4. Fill in the following details:
-   - **App Name**: <Your App Name> // example: frontegg-cicube-enterprise
-   - **Homepage URL**: Your CI Cube Enterprise instance URL // example: https://cicube-app.example.com
-   - **Webhook URL**: `https://<your-api-domain>/api/github/webhook` // example: https://cicube-api.example.com/api/github/webhook
-   - **Expire user authorization tokens**: Uncheck this option
-   - **Request user authorization (OAuth) during installation**: Enable this option
-   - **Active**: **Uncheck** this option under Webhook section
+   - **GitHub App name**: `cicube-enterprise` (or any name you prefer)
+   - **Homepage URL**: Your Web UI domain (e.g., `https://app.cicube.io`)
+   - **Webhook URL**: Your API domain + `/api/github/webhook` (e.g., `https://api.cicube.io/api/github/webhook`)
+   - **Webhook - Active**: **Uncheck** this option
+   - **Expire user authorization tokens**: **Uncheck** this option
+   - **Request user authorization (OAuth) during installation**: **Check** this option
 
-![GitHub App Installation](./app-1.png)
-
-![GitHub App Installation](./app-2.png)
-
-
-1. Set the following permissions:
-   - **Repository Permissions**:
+5. Set the following permissions:
+   - **Repository permissions**:
      - Actions: Read
      - Metadata: Read
      - Webhooks: Read & Write
-   - **Organization Permissions**:
+   - **Organization permissions**:
      - Members: Read
      - Plan: Read
-   - **Account Permissions**:
+   - **Account permissions**:
      - Email addresses: Read
 
-![GitHub App Installation](./app-3.png)
+6. Click "Create GitHub App" button
+7. Save the following information from the created app:
+   - **App ID**
+   - **Client ID**
+   - Click "Generate a new client secret" and save the **Client Secret**
 
-1. After creating the app:
-   - Save the App ID
-   - Generate and save a secret key
-   - Install the app in your organization
+## 2. Add Helm Repositories
 
-2. Update your CI Cube configuration with:
-   - App ID
-   - Secret key
-
-Note: Make sure your CI Cube instance is accessible from GitHub's IP addresses to receive webhooks.
-
-7. Update your CI Cube configuration with the following environment variables:
-   
-   For API:
-   ```bash
-   GITHUB_APP_ID=<your-app-id>
-   GITHUB_CLIENT_ID=<your-client-id>
-   GITHUB_CLIENT_SECRET=<your-client-secret>
-   ```
-
-   For APP:
-   ```bash
-   VITE_GITHUB_APP_ID=<your-app-id>
-   VITE_GITHUB_APP_NAME=<your-app-name> // example: frontegg-cicube-enterprise
-   ```
-
-## Installation Steps
-
-1. Add the required Helm repositories:
 ```bash
 helm repo add cicube https://ci-cube.github.io/helm-charts
 helm repo add bitnami https://charts.bitnami.com/bitnami
 helm repo update
 ```
 
-2. First, create a registry secret to pull images:
+## 3. Create Registry Secret
+
 ```bash
 kubectl create secret docker-registry registry-secret \
   --docker-server=ghcr.io \
@@ -86,248 +57,251 @@ kubectl create secret docker-registry registry-secret \
   --docker-email=YOUR_EMAIL
 ```
 
-3. Create a `values.yaml` file to override default values. Here's a template:
+## 4. Generate Secure Passwords
+
+```bash
+# Generate PostgreSQL password (32 characters)
+openssl rand -hex 16
+
+# Generate JWT secret (32 characters)
+openssl rand -hex 16
+```
+
+## 5. Create Values File
+
+Save the following content as `values.yaml`. Replace all values marked with YOUR_* with your own values:
 
 ```yaml
 global:
   imagePullSecrets:
     - name: registry-secret
-
-postgresql:
-  auth:
-    username: "postgres"
-    password: "YOUR_PASSWORD"        # Important: This password will be used for all PostgreSQL connections - openssl rand -hex 16
-    database: "halley"
-    postgresPassword: "YOUR_PASSWORD"  # Must be same as password above
+  
+  secrets:
+    postgresql:
+      password: "YOUR_POSTGRESQL_PASSWORD"  # Generated with openssl rand -hex 16
+      host: ""  # Optional: Leave empty to use default
+    redis:
+      host: ""  # Optional: Leave empty to use default
+    jwt:
+      secret: "YOUR_JWT_SECRET"  # Generated with openssl rand -hex 16
+    github:
+      clientId: "YOUR_GITHUB_CLIENT_ID"  # From GitHub App
+      clientSecret: "YOUR_GITHUB_CLIENT_SECRET"  # From GitHub App
+      appName: "YOUR_GITHUB_APP_NAME"  # From GitHub App (e.g., cicube-enterprise)
+    google:
+      clientSecret: ""  # Optional: For Google OAuth
+    smtp:
+      username: ""  # Optional: For email notifications
+      password: ""  # Optional: For email notifications
+    loops:
+      apiKey: ""  # Optional: For Loops integration
 
 api:
   enabled: true
+  replicaCount: 1
+  
+  image:
+    repository: ghcr.io/ci-cube/cicube-api/api
+    tag: "latest"  # Replace with specific version
+    pullPolicy: IfNotPresent
+
   ingress:
     enabled: true
+    annotations:
+      cert-manager.io/issuer: "letsencrypt-prod"  # Optional: For automatic TLS
     hosts:
-      - host: api.example.com  # Your API domain - example: https://cicube-api.example.com
+      - host: "api.YOUR_DOMAIN.com"  # Replace with your API domain
         paths:
           - path: /
             pathType: ImplementationSpecific
     tls:
       - secretName: "api-tls"
         hosts:
-          - api.example.com
-  env:
-    JWT_SECRET: "YOUR_JWT_SECRET"  # Must be same in all JWT references - openssl rand -hex 16
-    API_URL: "https://api.example.com"  # Must match ingress host - example: https://cicube-api.example.com
-    DATABASE_HOST: "ci-cube-postgresql"  # Default PostgreSQL service name
-    DATABASE_USER: "postgres"  # Default PostgreSQL username
-    DATABASE_PASSWORD: ""  # IMPORTANT: Must match postgresql.auth.password
-    DATABASE_NAME: "halley"  # Default database name
-    DATABASE_SSL_MODE: "false"  # SSL mode must be false, never use ignore
-    REDIS_HOST: "ci-cube-redis-master"  # Default Redis service name
-    REDIS_PORT: "6379"  # Default Redis port
+          - "api.YOUR_DOMAIN.com"  # Replace with your API domain
 
-cubejs:
-  enabled: true
-  ingress:
-    enabled: true
-    hosts:
-      - host: cube.example.com  # Your Cube domain
-        paths:
-          - path: /
-            pathType: ImplementationSpecific
-    tls:
-      - secretName: "cube-tls"
-        hosts:
-          - cube.example.com // Your Cube domain - example: https://cicube-cube.example.com
-  cubeApi:
-    env:
-      var:
-        CUBEJS_API_SECRET: "YOUR_JWT_SECRET"  # Must match JWT_SECRET above
-        CUBEJS_DB_TYPE: "postgres"  # Database type
-        CUBEJS_DB_HOST: "ci-cube-postgresql"  # Default PostgreSQL service name
-        CUBEJS_DB_NAME: "halley"  # Default database name
-        CUBEJS_DB_USER: "postgres"  # Default PostgreSQL username
-        CUBEJS_DB_PASS: ""  # IMPORTANT: Must match postgresql.auth.password
-        CUBEJS_DB_SSL: "false"  # SSL mode must be false, never use ignore
-        CUBEJS_DEV_MODE: "false"  # Development mode disabled by default
-        CUBEJS_CUBESTORE_HOST: "ci-cube-cubejs-cubestore-router"  # Default CubeStore router service name
-        CUBEJS_LOG_LEVEL: "error"  # Default log level
-
-  cubeRefreshWorker:
-    env:
-      var:
-        CUBEJS_DB_TYPE: "postgres"
-        CUBEJS_DB_HOST: "ci-cube-postgresql"
-        CUBEJS_DB_NAME: "halley"
-        CUBEJS_DB_USER: "postgres"
-        CUBEJS_DB_PASS: ""  # IMPORTANT: Must match postgresql.auth.password
-        CUBEJS_DB_SSL: "false"  # SSL mode must be false, never use ignore
-        CUBEJS_DEV_MODE: "false"
-        CUBEJS_REFRESH_WORKER: "true"
-        CUBEJS_LOG_LEVEL: "error"
+  # API Environment Variables
+  DATABASE_USER: "postgres"
+  DATABASE_NAME: "halley"
+  DATABASE_SSL_MODE: "false"
+  REDIS_PORT: "6379"
+  WEB_URL: "https://app.YOUR_DOMAIN.com"  # Replace with your Web UI domain
+  API_URL: "https://api.YOUR_DOMAIN.com"  # Replace with your API domain
+  SMTP_HOST: ""  # Optional: For email notifications
+  SMTP_PORT: ""  # Optional: For email notifications
+  SMTP_FROM: ""  # Optional: For email notifications
 
 app:
   enabled: true
+  replicaCount: 1
+  
+  image:
+    repository: ghcr.io/ci-cube/cicube-app/app
+    tag: "latest"  # Replace with specific version
+    pullPolicy: IfNotPresent
+
   ingress:
     enabled: true
+    annotations:
+      cert-manager.io/issuer: "letsencrypt-prod"  # Optional: For automatic TLS
     hosts:
-      - host: app.example.com  # Your App domain
+      - host: "app.YOUR_DOMAIN.com"  # Replace with your Web UI domain
         paths:
           - path: /
             pathType: ImplementationSpecific
     tls:
       - secretName: "app-tls"
         hosts:
-          - app.example.com
+          - "app.YOUR_DOMAIN.com"  # Replace with your Web UI domain
+
   env:
-    VITE_API_URL: "https://api.example.com"    # Must match API ingress host - example: https://cicube-api.example.com
-    VITE_WEB_URL: "https://app.example.com"    # Must match App ingress host - example: https://cicube-app.example.com
-    VITE_CUBE_API_URL: "https://cube.example.com"  # Must match Cube ingress host - example: https://cicube-cube.example.com
+    VITE_API_URL: "https://api.YOUR_DOMAIN.com"  # Replace with your API domain
+    VITE_WEB_URL: "https://app.YOUR_DOMAIN.com"  # Replace with your Web UI domain
+    VITE_CUBE_API_URL: "https://cube.YOUR_DOMAIN.com"  # Replace with your Cube domain
+    VITE_GA_MEASUREMENT_ID: ""  # Optional: For Google Analytics
+
+cubejs:
+  enabled: true
+  
+  annotations: 
+    reloader.stakater.com/auto: "true"
+  
+  ingress:
+    enabled: true
+    annotations:
+      cert-manager.io/issuer: "letsencrypt-prod"  # Optional: For automatic TLS
+    hosts:
+      - host: "cube.YOUR_DOMAIN.com"  # Replace with your Cube domain
+        paths:
+          - path: /
+            pathType: ImplementationSpecific
+    tls:
+      - secretName: "cube-tls"
+        hosts:
+          - "cube.YOUR_DOMAIN.com"  # Replace with your Cube domain
+
+  cubeApi:
+    image: ghcr.io/ci-cube/cicube-api/cube
+    tag: "latest"  # Replace with specific version
+    pullPolicy: IfNotPresent
+    service:
+      type: ClusterIP
+      port: 4000
+    replicas: 1
+
+  cubeRefreshWorker:
+    image: ghcr.io/ci-cube/cicube-api/cube
+    tag: "latest"  # Replace with specific version
+    pullPolicy: IfNotPresent
+    replicas: 1
+
+postgresql:
+  enabled: true
+  auth:
+    username: "postgres"
+    database: "halley"
+    existingSecret: "cicube-app-secrets"
+    secretKeys:
+      adminPasswordKey: postgresql-password
+      userPasswordKey: postgresql-password
+  primary:
+    persistence:
+      enabled: true
+      size: 10Gi  # Adjust based on your needs
 ```
 
-1. Install the Helm chart:
+Important notes about values.yaml:
+
+1. **Domains**: Replace all instances of `YOUR_DOMAIN.com` with your actual domain
+   - API: api.YOUR_DOMAIN.com
+   - Web UI: app.YOUR_DOMAIN.com
+   - Cube: cube.YOUR_DOMAIN.com
+
+2. **Required Secrets**: These must be set
+   - `global.secrets.postgresql.password`: PostgreSQL password
+   - `global.secrets.jwt.secret`: JWT secret
+   - `global.secrets.github.clientId`: GitHub Client ID
+   - `global.secrets.github.clientSecret`: GitHub Client Secret
+   - `global.secrets.github.appName`: GitHub App name
+
+3. **Image Tags**: Replace `latest` with specific versions
+   - `api.image.tag`
+   - `app.image.tag`
+   - `cubejs.cubeApi.tag`
+   - `cubejs.cubeRefreshWorker.tag`
+
+4. **Optional Features**: These can be left empty if not needed
+   - Google OAuth configuration
+   - SMTP settings for email notifications
+   - Google Analytics measurement ID
+   - Loops integration
+
+5. **Storage**: Adjust PostgreSQL storage size based on your needs
+   - `postgresql.primary.persistence.size`: Default is 10Gi
+
+## 6. Install
+
 ```bash
-helm install ci-cube cicube/halley-enterprise -f values.yaml -n your-namespace
+# Create namespace
+kubectl create namespace cicube
+
+# Install Helm chart
+helm install cicube cicube/halley-enterprise \
+  -f values.yaml \
+  -n cicube
 ```
 
-## Important Configuration Notes
+## 7. Verify Installation
 
-### Domain and Ingress Configuration
-The chart uses three main domains that need to be configured:
-
-1. API Domain (api.example.com):
-   - Set in `api.ingress.hosts[0].host`
-   - Used in `api.env.API_URL`
-   - Referenced in `app.env.VITE_API_URL`
-
-2. Cube Domain (cube.example.com):
-   - Set in `cubejs.ingress.hosts[0].host`
-   - Referenced in `app.env.VITE_CUBE_API_URL`
-
-3. App Domain (app.example.com):
-   - Set in `app.ingress.hosts[0].host`
-   - Used in `app.env.VITE_WEB_URL`
-
-Make sure these domains are consistent across your configuration. All URLs should use HTTPS protocol.
-
-### PostgreSQL Configuration
-Database passwords must be identical in these locations:
-- `postgresql.auth.password`
-- `postgresql.auth.postgresPassword`
-- `api.DATABASE_PASSWORD`
-- `cubejs.cubeApi.env.var.CUBEJS_DB_PASS`
-- `cubejs.cubeRefreshWorker.env.var.CUBEJS_DB_PASS`
-
-IMPORTANT NOTES:
-1. All database passwords must be identical across all locations
-2. When changing the password, update it in all locations
-3. Password should be at least 12 characters long and include complex characters
-4. Pods may need to be restarted after password changes
-
-The chart will automatically configure all necessary database connections using these credentials.
-
-### Redis Configuration
-The chart includes Redis as a dependency for the API component. Redis is configured with:
-- Standalone architecture (no replication)
-- No persistence
-- No authentication
-- Default port: 6379
-
-The Redis host will be automatically configured as: `ci-cube-redis-master`
-
-### JWT Secret Configuration
-The JWT secret must be the same in these locations:
-- `api.env.JWT_SECRET`
-- `cubejs.cubeApi.env.var.CUBEJS_API_SECRET`
-
-### Cube.js Configuration
-Database configuration must be identical for both cubeApi and cubeRefreshWorker:
-- `cubejs.cubeApi.env.var.CUBEJS_DB_PASS`
-- `cubejs.cubeRefreshWorker.env.var.CUBEJS_DB_PASS`
-Both must match `postgresql.auth.password`
-
-Default Service Names:
-- PostgreSQL: `ci-cube-postgresql`
-- CubeStore Router: `ci-cube-cubejs-cubestore-router`
-
-IMPORTANT NOTES:
-1. Database passwords must be identical across all components
-2. SSL mode must be set to "false", never use "ignore"
-3. Development mode should be disabled in production
-4. Log level should be set to "error" in production
-
-## Upgrading
-
-To upgrade the release:
 ```bash
-helm upgrade ci-cube . -f values.yaml -n your-namespace
+# Check pod status
+kubectl get pods -n cicube
+
+# Check ingress status
+kubectl get ingress -n cicube
 ```
 
-## Uninstalling
+The installation is complete when all pods are in Running state and ingresses are ready.
 
-To uninstall/delete the deployment:
-```bash
-helm uninstall ci-cube -n your-namespace
-```
+## 8. DNS Setup
 
-## Configuration Options
-
-### Global Options
-| Parameter | Description | Default |
-|-----------|-------------|---------|
-| `global.imagePullSecrets` | Global image pull secrets | `[{name: registry-secret}]` |
-
-### Ingress Options
-| Parameter | Description | Default |
-|-----------|-------------|---------|
-| `api.ingress.hosts[0].host` | API domain name | `api.example.com` |
-| `cubejs.ingress.hosts[0].host` | Cube domain name | `cube.example.com` |
-| `app.ingress.hosts[0].host` | App domain name | `app.example.com` |
-
-### PostgreSQL Options
-| Parameter | Description | Default |
-|-----------|-------------|---------|
-| `postgresql.auth.username` | PostgreSQL username | `postgres` |
-| `postgresql.auth.password` | PostgreSQL password | `postgres123` |
-| `postgresql.auth.database` | PostgreSQL database name | `halley` |
-| `postgresql.auth.postgresPassword` | PostgreSQL admin password | Same as password |
-
-### Redis Options
-| Parameter | Description | Default |
-|-----------|-------------|---------|
-| `api.redis.enabled` | Enable Redis | `true` |
-| `api.redis.architecture` | Redis architecture | `standalone` |
-| `api.redis.auth.enabled` | Enable Redis authentication | `false` |
-| `api.redis.master.persistence.enabled` | Enable Redis persistence | `false` |
+Point the following domains to your Kubernetes cluster IP:
+- api.domain.com
+- app.domain.com
+- cube.domain.com
 
 ## Troubleshooting
 
-1. If pods are not starting, check the image pull secrets:
+### If Pods Are Not Starting
 ```bash
-kubectl get events -n your-namespace
+# Check events
+kubectl get events -n cicube
+
+# Check pod logs
+kubectl logs -f POD_NAME -n cicube
 ```
 
-2. To check PostgreSQL connection:
+### Check Database Connection
 ```bash
-kubectl exec -it <pod-name> -n your-namespace -- psql -U postgres -d halley
+# Connect to PostgreSQL pod
+kubectl exec -it $(kubectl get pod -l app.kubernetes.io/name=postgresql -n cicube -o jsonpath='{.items[0].metadata.name}') -n cicube -- psql -U postgres -d halley
 ```
 
-3. To view application logs:
-```bash
-kubectl logs -f <pod-name> -n your-namespace
-```
+### Certificate Issues
+If your TLS certificates are not ready, you can temporarily disable TLS in ingresses:
+```yaml
+api:
+  ingress:
+    enabled: true
+    tls: []  # Disable TLS
 
-4. To check PostgreSQL pod status:
-```bash
-kubectl get pods -l app.kubernetes.io/name=postgresql -n your-namespace
-```
+app:
+  ingress:
+    enabled: true
+    tls: []  # Disable TLS
 
-5. To check ingress configuration:
-```bash
-kubectl get ingress -n your-namespace
-kubectl describe ingress <ingress-name> -n your-namespace
+cubejs:
+  ingress:
+    enabled: true
+    tls: []  # Disable TLS
 ```
-### Database SSL Configuration
-SSL mode configuration is critical for security:
-- `api.DATABASE_SSL_MODE` must be set to "false"
-- `cubejs.cubeApi.env.var.CUBEJS_DB_SSL` must be set to "false"
-- `cubejs.cubeRefreshWorker.env.var.CUBEJS_DB_SSL` must be set to "false"
 

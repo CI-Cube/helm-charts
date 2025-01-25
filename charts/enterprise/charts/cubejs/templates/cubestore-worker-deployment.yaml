@@ -39,24 +39,32 @@ spec:
           persistentVolumeClaim:
             claimName: {{ .Release.Name }}-{{ .Chart.Name }}-cubestore-pvc
       containers:
-        - name: cubestore-worker
-          envFrom:
-            - configMapRef:
-                name: {{ include "chart.fullname" . }}-{{ .Values.cubestoreWorker.configmap.name }}
-          command: ["./cubestored"]
-          volumeMounts:
-            - mountPath: /cube/data
-              name: cubestore-pv
-          {{- with .Values.cubestoreWorker.securityContext }}
+        - name: {{ .Chart.Name }}
           securityContext:
-            {{- toYaml . | nindent 12 }}
-          {{- end }}
+            {{- toYaml .Values.securityContext | nindent 12 }}
           image: {{ .Values.cubestoreWorker.image | quote }}
           imagePullPolicy: {{ .Values.cubestoreWorker.pullPolicy }}
           ports:
             - name: http
               containerPort: {{ .Values.cubestoreWorker.service.port }}
               protocol: TCP
+          env:
+            - name: CUBESTORE_WORKERS
+              value: {{ $count := .Values.cubestoreWorker.replicas | int }}{{- $networkAppPort  := .Values.cubestoreWorker.service.port -}}
+              {{- range until $count }}{{ $.Release.Name }}-cubejs-cubestore-worker-{{  .  }}.{{ $.Release.Name }}-cubejs-cubestore-worker:{{ $networkAppPort }},{{- end }}
+            - name: CUBESTORE_SERVER_NAME
+              value: "{{ .Release.Name }}-cubejs-cubestore-worker-0.{{ .Release.Name }}-cubejs-cubestore-worker:10001"
+            - name: CUBESTORE_WORKER_PORT
+              value: "10001"
+            - name: CUBESTORE_REMOTE_DIR
+              value: "/cube/data"
+            - name: CUBESTORE_META_ADDR
+              value: "{{ .Release.Name }}-cubejs-cubestore-router:9999"
+            - name: CUBEJS_LOG_LEVEL
+              value: "trace"
+          volumeMounts:
+            - mountPath: /cube/data
+              name: cubestore-pv
           {{- with .Values.cubestoreWorker.resources }}
           resources:
             {{- toYaml . | nindent 12 }}

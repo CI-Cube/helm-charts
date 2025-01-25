@@ -40,9 +40,6 @@ spec:
             claimName: {{ .Release.Name }}-{{ .Chart.Name }}-cubestore-pvc
       containers:
         - name: {{ .Chart.Name }}
-          envFrom:
-            - configMapRef:
-                name: {{ include "chart.fullname" . }}-{{ .Values.cubeRefreshWorker.configmap.name }}
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
           image: "{{ .Values.cubeRefreshWorker.image }}:{{ .Values.cubeRefreshWorker.tag }}"
@@ -56,6 +53,35 @@ spec:
               protocol: TCP
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
+          env:
+            - name: CUBEJS_DB_TYPE
+              value: "postgres"
+            - name: CUBEJS_DB_HOST
+              value: {{ printf "%s-postgresql" .Release.Name | quote }}
+            - name: CUBEJS_DB_NAME
+              value: "halley"
+            - name: CUBEJS_DB_USER
+              value: "postgres"
+            - name: CUBEJS_DB_PASS
+              valueFrom:
+                secretKeyRef:
+                  key: postgresql-password
+                  name: {{ .Release.Name }}-app-secrets
+            - name: CUBEJS_DB_SSL
+              value: "false"
+            - name: CUBEJS_DEV_MODE
+              value: "false"
+            - name: CUBEJS_REFRESH_WORKER
+              value: "true"
+            - name: CUBEJS_LOG_LEVEL
+              value: "trace"
+            - name: CUBEJS_API_SECRET
+              valueFrom:
+                secretKeyRef:
+                  key: jwt-secret
+                  name: {{ .Release.Name }}-app-secrets
+            - name: CUBEJS_CUBESTORE_HOST
+              value: "{{ .Release.Name }}-cubejs-cubestore-router"
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}

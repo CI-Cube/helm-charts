@@ -36,19 +36,6 @@ spec:
             claimName: {{ .Release.Name }}-{{ .Chart.Name }}-cubestore-pvc
       containers:
         - name: {{ .Chart.Name }}
-          env:
-          - name: CUBESTORE_WORKERS
-            value: {{ $count := .Values.cubestoreWorker.replicas | int }}{{- $networkAppPort  := .Values.cubestoreWorker.service.port -}}
-            {{- range until $count }}{{ $.Release.Name }}-{{ $.Chart.Name }}-cubestore-worker-{{  .  }}.{{ $.Release.Name }}-{{ $.Chart.Name }}-cubestore-worker:{{ $networkAppPort }},
-            {{- end }}
-          envFrom:
-          - configMapRef: 
-              name: {{ include "chart.fullname" . }}-{{ .Values.cubestoreRouter.configmap.name }}
-          command: ["/bin/sh","-c"]
-          args: ["unset CUBESTORE_WORKER_PORT; ./cubestored"]
-          volumeMounts:
-            - mountPath: /cube/data
-              name: cubestore-pv
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
           image: {{ .Values.cubestoreRouter.image | quote }}
@@ -59,10 +46,27 @@ spec:
               protocol: TCP
             - name: http2
               containerPort: 3030
-              protocol: TCP 
+              protocol: TCP
             - name: mysql
               containerPort: 3306
-              protocol: TCP   
+              protocol: TCP
+          command: ["/bin/sh","-c"]
+          args: ["unset CUBESTORE_WORKER_PORT; ./cubestored"]
+          env:
+            - name: CUBESTORE_WORKERS
+              value: {{ $count := .Values.cubestoreWorker.replicas | int }}{{- $networkAppPort  := .Values.cubestoreWorker.service.port -}}
+              {{- range until $count }}{{ $.Release.Name }}-cubejs-cubestore-worker-{{  .  }}.{{ $.Release.Name }}-cubejs-cubestore-worker:{{ $networkAppPort }},{{- end }}
+            - name: CUBESTORE_REMOTE_DIR
+              value: "/cube/data"
+            - name: CUBESTORE_META_PORT
+              value: "9999"
+            - name: CUBESTORE_SERVER_NAME
+              value: "{{ .Release.Name }}-cubejs-cubestore-router:9999"
+            - name: CUBEJS_LOG_LEVEL
+              value: "trace"
+          volumeMounts:
+            - mountPath: /cube/data
+              name: cubestore-pv
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
       {{- with .Values.nodeSelector }}

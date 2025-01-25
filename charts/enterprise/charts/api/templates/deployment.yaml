@@ -47,12 +47,17 @@ spec:
             - name: DATABASE_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  key: DATABASE_PASSWORD
-                  name: {{ .Release.Name }}-auth
+                  key: postgresql-password
+                  name: {{ .Release.Name }}-app-secrets
             - name: DATABASE_NAME
               valueFrom:
                 secretKeyRef:
                   key: DATABASE_NAME
+                  name: {{ .Release.Name }}-auth
+            - name: DATABASE_SSL_MODE
+              valueFrom:
+                secretKeyRef:
+                  key: DATABASE_SSL_MODE
                   name: {{ .Release.Name }}-auth
             - name: REDIS_HOST
               valueFrom:
@@ -67,18 +72,18 @@ spec:
             - name: JWT_SECRET
               valueFrom:
                 secretKeyRef:
-                  key: JWT_SECRET
-                  name: {{ .Release.Name }}-auth
+                  key: jwt-secret
+                  name: {{ .Release.Name }}-app-secrets
             - name: GITHUB_CLIENT_ID
               valueFrom:
                 secretKeyRef:
-                  key: GITHUB_CLIENT_ID
-                  name: {{ .Release.Name }}-auth
+                  key: github-client-id
+                  name: {{ .Release.Name }}-app-secrets
             - name: GITHUB_CLIENT_SECRET
               valueFrom:
                 secretKeyRef:
-                  key: GITHUB_CLIENT_SECRET
-                  name: {{ .Release.Name }}-auth
+                  key: github-client-secret
+                  name: {{ .Release.Name }}-app-secrets
             - name: GOOGLE_CLIENT_ID
               valueFrom:
                 secretKeyRef:
@@ -87,8 +92,8 @@ spec:
             - name: GOOGLE_CLIENT_SECRET
               valueFrom:
                 secretKeyRef:
-                  key: GOOGLE_CLIENT_SECRET
-                  name: {{ .Release.Name }}-auth
+                  key: google-client-secret
+                  name: {{ .Release.Name }}-app-secrets
             - name: WEB_URL
               valueFrom:
                 secretKeyRef:
@@ -102,13 +107,13 @@ spec:
             - name: SMTP_USERNAME
               valueFrom:
                 secretKeyRef:
-                  key: SMTP_USERNAME
-                  name: {{ .Release.Name }}-auth
+                  key: smtp-username
+                  name: {{ .Release.Name }}-app-secrets
             - name: SMTP_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  key: SMTP_PASSWORD
-                  name: {{ .Release.Name }}-auth
+                  key: smtp-password
+                  name: {{ .Release.Name }}-app-secrets
             - name: SMTP_HOST
               valueFrom:
                 secretKeyRef:
@@ -125,19 +130,12 @@ spec:
                   key: SMTP_FROM
                   name: {{ .Release.Name }}-auth
             - name: CUBE_API_URL
-              valueFrom:
-                secretKeyRef:
-                  key: CUBE_API_URL
-                  name: {{ .Release.Name }}-auth
+              value: "http://{{ .Release.Name }}-cubejs-cube-api.{{ .Release.Namespace }}.svc.cluster.local:4000/cubejs-api/v1"
             - name: LOOPS_API_KEY
               valueFrom:
                 secretKeyRef:
-                  key: LOOPS_API_KEY
-                  name: {{ .Release.Name }}-auth
-            - name: NEW_RELIC_LICENSE_KEY
-              value: "0f15634945de9acfa3eee68bf791662bFFFFNRAL"
-            - name: NEW_RELIC_APP_NAME
-              value: "cicube"
+                  key: loops-api-key
+                  name: {{ .Release.Name }}-app-secrets
           ports:
             - name: http
               containerPort: 3001
@@ -148,14 +146,12 @@ spec:
               port: http
             periodSeconds: 60
             timeoutSeconds: 10
-            
           readinessProbe:
             httpGet:
               path: /test/test
               port: http
             periodSeconds: 60
             timeoutSeconds: 10
-            
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
       {{- with .Values.nodeSelector }}

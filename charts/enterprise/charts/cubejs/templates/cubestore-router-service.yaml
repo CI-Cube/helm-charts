@@ -6,20 +6,20 @@ metadata:
     {{- include "chart.labels" . | nindent 4 }}
     app.kubernetes.io/component: cubestore-router
 spec:
-  type: ClusterIP
+  type: {{ .Values.cubestoreRouter.service.type }}
   ports:
     - port: {{ .Values.cubestoreRouter.service.port }}
-      targetPort: {{ .Values.cubestoreRouter.service.port }}
+      targetPort: http
       protocol: TCP
       name: http
-    - port: 3030
-      targetPort: 3030
+    - port: {{ .Values.cubestoreRouter.service.http2_port }}
+      targetPort: http2
       protocol: TCP
       name: http2
-    - port: 3306
-      targetPort: 3306
+    - port: {{ .Values.cubestoreRouter.service.mysql_port }}
+      targetPort: mysql
       protocol: TCP
-      name: mysql   
+      name: mysql
   selector:
     {{- include "chart.selectorLabels" . | nindent 4 }}
     app.kubernetes.io/component: cubestore-router

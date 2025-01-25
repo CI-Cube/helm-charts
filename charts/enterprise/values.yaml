@@ -3,6 +3,27 @@ global:
   # Image pull secrets for all deployments
   imagePullSecrets:
     - name: registry-secret
+  
+  # Shared secrets configuration for all components
+  secrets:
+    postgresql:
+      password: "postgres123"
+      host: ""  # Optional: If not set, will use {{ .Release.Name }}-postgresql
+    redis:
+      host: ""  # Optional: If not set, will use {{ .Release.Name }}-redis-master
+    jwt:
+      secret: "secret123"
+    github:
+      clientId: ""
+      clientSecret: ""
+      appName: ""
+    google:
+      clientSecret: ""
+    smtp:
+      username: ""
+      password: ""
+    loops:
+      apiKey: ""
 
 # Component enablement
 api:
@@ -98,28 +119,17 @@ api:
       persistence:
         enabled: false
 
-  # API Secret Values
-  DATABASE_HOST: "ci-cube-postgresql"
+# API Secret Values
   DATABASE_USER: "postgres"
-  DATABASE_PASSWORD: "postgres123"
   DATABASE_NAME: "halley"
   DATABASE_SSL_MODE: "false"
-  REDIS_HOST: "ci-cube-redis-master"
   REDIS_PORT: "6379"
-  JWT_SECRET: "secret123456789"
-  GITHUB_CLIENT_ID: "Iv23li2VKaE3F51hKfyB"
-  GITHUB_CLIENT_SECRET: "499b9fe2e3c4b033a24d96791cfed0c2efdd69e2"
   GOOGLE_CLIENT_ID: ""
-  GOOGLE_CLIENT_SECRET: ""
   WEB_URL: "https://app2.cicube.io"
   API_URL: "https://api2.cicube.io"
-  SMTP_USERNAME: ""
-  SMTP_PASSWORD: ""
   SMTP_HOST: "email-smtp.eu-west-1.amazonaws.com"
   SMTP_PORT: "2465"
   SMTP_FROM: '"CICube Enterprise" <info@cicube.io>'
-  CUBE_API_URL: "http://cube-api.default.svc.cluster.local:4000/cubejs-api/v1"
-  LOOPS_API_KEY: ""
 
 cubejs:
   enabled: true
@@ -175,21 +185,6 @@ cubejs:
       port: 4000
       service_port: 4000
     replicas: 1
-    configmap:
-      name: cube-api-config
-    env:
-      var:
-        CUBEJS_DB_TYPE: "postgres"
-        CUBEJS_DB_HOST: "ci-cube-postgresql"
-        CUBEJS_DB_NAME: "halley"
-        CUBEJS_DB_USER: "postgres"
-        CUBEJS_DB_PASS: "postgres123"
-        CUBEJS_DB_SSL: "false"
-        CUBEJS_DEV_MODE: "false"
-        CUBEJS_DEFAULT_API_SCOPES: "graphql,meta,data,jobs"
-        CUBEJS_CUBESTORE_HOST: "ci-cube-cubejs-cubestore-router"
-        CUBEJS_LOG_LEVEL: "trace"
-        CUBEJS_API_SECRET: "secret123456789"
 
   cubeRefreshWorker:
     image: ghcr.io/ci-cube/cicube-api/cube
@@ -200,20 +195,6 @@ cubejs:
       port: 80
       service_port: 80
     replicas: 1
-    configmap:
-      name: cube-refresh-worker-config
-    env:
-      var:
-        CUBEJS_DB_TYPE: "postgres"
-        CUBEJS_DB_HOST: "ci-cube-postgresql"
-        CUBEJS_DB_NAME: "halley"
-        CUBEJS_DB_USER: "postgres"
-        CUBEJS_DB_PASS: "postgres123"
-        CUBEJS_DB_SSL: "false"
-        CUBEJS_DEV_MODE: "false"
-        CUBEJS_REFRESH_WORKER: "true"
-        CUBEJS_LOG_LEVEL: "trace"
-        CUBEJS_API_SECRET: "secret123456789"
 
   cubestoreRouter:
     image: "cubejs/cubestore"
@@ -222,9 +203,9 @@ cubejs:
       type: ClusterIP
       port: 9999
       service_port: 9999
+      http2_port: 3030
+      mysql_port: 3306
     replicas: 1
-    configmap:
-      name: cubestore-router-config
     env:
       var:
         CUBESTORE_REMOTE_DIR: "/cube/data"
@@ -237,15 +218,13 @@ cubejs:
     pullPolicy: IfNotPresent
     service:
       type: ClusterIP
-      port: 9001
-      service_port: 9001
+      port: 10001
+      service_port: 10001
     replicas: 1
-    configmap:
-      name: ci-cube-cubejs-cubestore-worker-config
     env:
       var:
-        CUBESTORE_SERVER_NAME: "ci-cube-cubejs-cubestore-worker-0.ci-cube-cubejs-cubestore-worker:9001"
-        CUBESTORE_WORKER_PORT: "9001"
+        CUBESTORE_SERVER_NAME: "ci-cube-cubejs-cubestore-worker-0.ci-cube-cubejs-cubestore-worker:10001"
+        CUBESTORE_WORKER_PORT: "10001"
         CUBESTORE_REMOTE_DIR: "/cube/data"
         CUBESTORE_META_ADDR: "ci-cube-cubejs-cubestore-router:9999"
         CUBEJS_LOG_LEVEL: "trace"
@@ -254,10 +233,12 @@ cubejs:
 postgresql:
   enabled: true
   auth:
+    existingSecret: "{{ .Release.Name }}-app-secrets"
+    secretKeys:
+      adminPasswordKey: postgresql-password
+      userPasswordKey: postgresql-password
     username: "postgres"
-    password: "postgres123"
     database: "halley"
-    postgresPassword: "postgres123"  # postgres admin şifresi
   primary:
     persistence:
       enabled: true
@@ -286,8 +267,6 @@ app:
   env:
     VITE_API_URL: "https://api2.cicube.io"
     VITE_WEB_URL: "https://app2.cicube.io"
-    VITE_GITHUB_CLIENT_ID: "Iv23li2VKaE3F51hKfyB"
-    VITE_GITHUB_APP_NAME: "cicube-2-enterprise-test-app"
     VITE_CUBE_API_URL: "https://cube2.cicube.io"
     VITE_GA_MEASUREMENT_ID: ""
     VITE_GOOGLE_CLIENT_ID: ""
@@ -325,3 +304,6 @@ app:
   nodeSelector: {}
   tolerations: []
   affinity: {}      
+
+
+

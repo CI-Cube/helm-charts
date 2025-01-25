@@ -102,7 +102,7 @@ api:
   
   image:
     repository: ghcr.io/ci-cube/cicube-api/api
-    tag: "sha-f72fb74"
+    tag: "sha-d961d49"
     pullPolicy: IfNotPresent
 
   ingress:

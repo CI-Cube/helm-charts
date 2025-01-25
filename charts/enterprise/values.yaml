@@ -12,7 +12,7 @@ global:
     redis:
       host: ""  # Optional: If not set, will use {{ .Release.Name }}-redis-master
     jwt:
-      secret: "secret123"
+      secret: "secret123456789"
     github:
       clientId: ""
       clientSecret: ""
@@ -32,7 +32,7 @@ api:
   
   image:
     repository: ghcr.io/ci-cube/cicube-api/api
-    tag: "sha-5fd8823"
+    tag: "sha-d961d49"
     pullPolicy: IfNotPresent
 
   imagePullSecrets:
@@ -178,7 +178,7 @@ cubejs:
 
   cubeApi:
     image: ghcr.io/ci-cube/cicube-api/cube
-    tag: "sha-13fd9ca"
+    tag: "sha-8695f0c"
     pullPolicy: IfNotPresent
     service:
       type: ClusterIP
@@ -188,7 +188,7 @@ cubejs:
 
   cubeRefreshWorker:
     image: ghcr.io/ci-cube/cicube-api/cube
-    tag: "sha-13fd9ca"
+    tag: "sha-8695f0c"
     pullPolicy: IfNotPresent
     service:
       type: ClusterIP
@@ -251,7 +251,7 @@ app:
   
   image:
     repository: ghcr.io/ci-cube/cicube-app/app
-    tag: "sha-48197e2"
+    tag: "sha-6b59111"
     pullPolicy: IfNotPresent
 
   imagePullSecrets:

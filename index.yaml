@@ -3,7 +3,7 @@ entries:
   halley-enterprise:
   - apiVersion: v2
     appVersion: 1.0.0
-    created: "2025-02-11T22:10:08.974018991Z"
+    created: "2025-02-11T22:14:39.428276576Z"
     dependencies:
     - condition: api.enabled
       name: api
@@ -22,10 +22,10 @@ entries:
       repository: file://charts/app
       version: '*'
     description: Enterprise Helm chart for Halley SaaS platform
-    digest: 917ccea2c727e90d6efd5372b695d2fb23b9718a13eef1bbc065eee51322f4f3
+    digest: 392122a640442b2abbb3438e38265f66f11ffd05d02da0e6065f72e2c3f7ed08
     name: halley-enterprise
     type: application
     urls:
     - https://ci-cube.github.io/helm-charts/halley-enterprise-0.1.1.tgz
     version: 0.1.1
-generated: "2025-02-11T22:10:08.954102805Z"
+generated: "2025-02-11T22:14:39.393865509Z"
